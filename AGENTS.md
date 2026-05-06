@@ -28,7 +28,7 @@ Runs XCTest coverage for `HealthReminderCore`.
 bash Scripts/package_app.sh
 ```
 
-Builds the release executable, wraps it as `build/HealthReminder.app`, and ad-hoc signs the app.
+Builds the release executable, wraps it as `build/HealthReminder.app`, writes the app version into `Info.plist`, and ad-hoc signs the app.
 
 ```bash
 open build/HealthReminder.app
@@ -36,13 +36,19 @@ open build/HealthReminder.app
 
 Runs the local packaged app. First launch may request notification permission.
 
+```bash
+hdiutil create -volname HealthReminder -srcfolder build/HealthReminder.app -ov -format UDZO release/HealthReminder-<version>.dmg
+```
+
+Creates the local release DMG. Keep `Scripts/package_app.sh` version, Git tag, DMG filename, and GitHub Release version in sync.
+
 ## Coding Style & Naming Conventions
 
 Use Swift 5 language mode with 4-space indentation. Keep AppKit-specific code in `Sources/HealthReminder/` and testable business rules in `Sources/HealthReminderCore/`. Prefer clear type names such as `ReminderEngine`, `ReminderEngineState`, and `ReminderEngineTests`. Avoid adding dependencies unless they materially simplify the app.
 
 ## Testing Guidelines
 
-Use XCTest. Test files should mirror the type under test, for example `ReminderEngineTests.swift`. Add tests for any change to reminder timing, idle detection rules, repeat reminders, or reset behavior. Run `swift test` before committing.
+Use XCTest. Test files should mirror the type under test, for example `ReminderEngineTests.swift`. Add tests for any change to reminder timing, idle detection rules, repeat reminders, per-reminder completion, or reset behavior. Run `swift test` before committing.
 
 ## Commit & Pull Request Guidelines
 
@@ -50,4 +56,4 @@ Current history uses concise, imperative commit messages, for example `Initial h
 
 ## Security & Configuration Tips
 
-Do not commit build outputs, `.build/`, `.app`, or `.dmg` artifacts. The app writes a user `LaunchAgents` plist only when run from the packaged `.app`; avoid changing login-item behavior without documenting the user impact.
+Do not commit build outputs, `.build/`, `.app`, or `.dmg` artifacts. The app writes a user `LaunchAgents` plist only when run from the packaged `.app`; avoid changing login-item behavior without documenting the user impact. When debugging user reports, confirm which app bundle is actually running because `/Applications/HealthReminder.app` may differ from the freshly built `build/HealthReminder.app`.

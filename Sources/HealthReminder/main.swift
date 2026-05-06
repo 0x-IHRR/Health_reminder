@@ -5,27 +5,66 @@ import HealthReminderCore
 import UserNotifications
 
 private final class HealthReminderApp: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
-    private let reminderInterval: TimeInterval = 20 * 60
-    private let repeatReminderInterval: TimeInterval = 5 * 60
+    private static let repeatReminderInterval: TimeInterval = 5 * 60
+
+    private let reminderDefinitions: [ReminderDefinition] = [
+        ReminderDefinition(
+            id: "eye-relax",
+            title: "眨眼放松",
+            body: "眨眨眼，看一下远处。",
+            interval: 10 * 60,
+            repeatReminderInterval: HealthReminderApp.repeatReminderInterval
+        ),
+        ReminderDefinition(
+            id: "movement-break",
+            title: "该休息一下了",
+            body: "看一次远处，站起来动一下。",
+            interval: 20 * 60,
+            repeatReminderInterval: HealthReminderApp.repeatReminderInterval
+        ),
+        ReminderDefinition(
+            id: "posture",
+            title: "调整坐姿",
+            body: "放松肩膀，坐直一点。",
+            interval: 30 * 60,
+            repeatReminderInterval: HealthReminderApp.repeatReminderInterval
+        ),
+        ReminderDefinition(
+            id: "water",
+            title: "喝水",
+            body: "喝几口水，别等口渴了再喝。",
+            interval: 45 * 60,
+            repeatReminderInterval: HealthReminderApp.repeatReminderInterval
+        ),
+        ReminderDefinition(
+            id: "neck-shoulder",
+            title: "放松肩颈",
+            body: "转转脖子，活动一下肩膀。",
+            interval: 60 * 60,
+            repeatReminderInterval: HealthReminderApp.repeatReminderInterval
+        )
+    ]
+
     private let idleThreshold: TimeInterval = 60
     private let tickInterval: TimeInterval = 1
     private let anyInputEventType = CGEventType(rawValue: UInt32.max)!
     private let bundleIdentifier = "com.healthreminder.app"
-    private let notificationCategoryIdentifier = "BREAK_REMINDER_CATEGORY"
-    private let restedActionIdentifier = "RESTED_ACTION"
+    private let notificationCategoryIdentifier = "HEALTH_REMINDER_CATEGORY"
+    private let completedActionIdentifier = "COMPLETED_ACTION"
+    private let reminderIDUserInfoKey = "reminderID"
 
     private var statusItem: NSStatusItem!
     private var statusMenu = NSMenu()
     private var statusMenuItem = NSMenuItem()
-    private var restedMenuItem = NSMenuItem()
+    private var completedMenuItem = NSMenuItem()
     private var reminderEngine: ReminderEngine!
+    private var notificationRequestIDsByReminder: [String: Set<String>] = [:]
     private var timer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         reminderEngine = ReminderEngine(
-            reminderInterval: reminderInterval,
-            repeatReminderInterval: repeatReminderInterval,
+            reminders: reminderDefinitions,
             idleThreshold: idleThreshold,
             tickInterval: tickInterval
         )
@@ -45,9 +84,9 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, UNUserNo
         statusMenuItem.isEnabled = false
         statusMenu.addItem(statusMenuItem)
 
-        restedMenuItem = NSMenuItem(title: "已休息", action: #selector(markRested), keyEquivalent: "")
-        restedMenuItem.target = self
-        statusMenu.addItem(restedMenuItem)
+        completedMenuItem = NSMenuItem(title: "已完成", action: #selector(markCurrentReminderCompleted), keyEquivalent: "")
+        completedMenuItem.target = self
+        statusMenu.addItem(completedMenuItem)
 
         statusMenu.addItem(.separator())
 
@@ -60,14 +99,14 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, UNUserNo
     }
 
     private func configureNotifications() {
-        let restedAction = UNNotificationAction(
-            identifier: restedActionIdentifier,
-            title: "已休息",
+        let completedAction = UNNotificationAction(
+            identifier: completedActionIdentifier,
+            title: "已完成",
             options: []
         )
         let category = UNNotificationCategory(
             identifier: notificationCategoryIdentifier,
-            actions: [restedAction],
+            actions: [completedAction],
             intentIdentifiers: [],
             options: []
         )
@@ -136,26 +175,30 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, UNUserNo
         )
         let result = reminderEngine.tick(idleSeconds: idleSeconds)
 
-        if result.shouldSendReminder {
-            sendReminderNotification()
+        for reminder in result.remindersToSend {
+            sendReminderNotification(for: reminder)
         }
 
         updateMenu()
     }
 
-    private func sendReminderNotification() {
+    private func sendReminderNotification(for reminder: ReminderDefinition) {
         let content = UNMutableNotificationContent()
-        content.title = "该休息一下了"
-        content.body = "看一次远处，站起来动一下。"
+        content.title = reminder.title
+        content.body = reminder.body
         content.sound = .default
         content.categoryIdentifier = notificationCategoryIdentifier
+        content.userInfo = [reminderIDUserInfoKey: reminder.id]
+
+        let requestIdentifier = "health-reminder-\(reminder.id)-\(UUID().uuidString)"
 
         let request = UNNotificationRequest(
-            identifier: "health-reminder-\(UUID().uuidString)",
+            identifier: requestIdentifier,
             content: content,
             trigger: nil
         )
 
+        notificationRequestIDsByReminder[reminder.id, default: []].insert(requestIdentifier)
         UNUserNotificationCenter.current().add(request) { error in
             if let error {
                 NSLog("HealthReminder notification delivery failed: \(error.localizedDescription)")
@@ -163,10 +206,26 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, UNUserNo
         }
     }
 
-    @objc private func markRested() {
-        reminderEngine.markRested()
-        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+    @objc private func markCurrentReminderCompleted() {
+        guard let reminderID = reminderEngine.currentOverdueReminder?.definition.id else {
+            return
+        }
+
+        markCompleted(reminderID: reminderID)
+    }
+
+    private func markCompleted(reminderID: String) {
+        reminderEngine.markCompleted(reminderID: reminderID)
+        removeDeliveredNotifications(for: reminderID)
         updateMenu()
+    }
+
+    private func removeDeliveredNotifications(for reminderID: String) {
+        guard let requestIdentifiers = notificationRequestIDsByReminder.removeValue(forKey: reminderID) else {
+            return
+        }
+
+        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: Array(requestIdentifiers))
     }
 
     @objc private func quit() {
@@ -176,19 +235,31 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, UNUserNo
     private func updateMenu() {
         switch reminderEngine.state {
         case .tracking:
-            let remainingMinutes = max(0, Int(ceil((reminderInterval - reminderEngine.elapsedActiveTime) / 60)))
-            statusMenuItem.title = "计时中，约 \(remainingMinutes) 分钟后提醒"
-            restedMenuItem.isEnabled = false
+            if let nextReminder = reminderEngine.nextReminder {
+                statusMenuItem.title = "\(nextReminder.definition.title)：约 \(minutesText(for: nextReminder.remainingActiveTime))后提醒"
+            } else {
+                statusMenuItem.title = "计时中"
+            }
+            completedMenuItem.isEnabled = false
             statusItem.button?.contentTintColor = nil
         case .pausedByIdle:
             statusMenuItem.title = "已离开，计时暂停"
-            restedMenuItem.isEnabled = false
+            completedMenuItem.isEnabled = false
             statusItem.button?.contentTintColor = NSColor.systemBlue
         case .overdue:
-            statusMenuItem.title = "该休息一下了"
-            restedMenuItem.isEnabled = true
+            if let currentReminder = reminderEngine.currentOverdueReminder {
+                statusMenuItem.title = currentReminder.definition.title
+            } else {
+                statusMenuItem.title = "有提醒待完成"
+            }
+            completedMenuItem.isEnabled = true
             statusItem.button?.contentTintColor = NSColor.systemOrange
         }
+    }
+
+    private func minutesText(for seconds: TimeInterval) -> String {
+        let remainingMinutes = max(1, Int(ceil(seconds / 60)))
+        return "\(remainingMinutes) 分钟"
     }
 
     func userNotificationCenter(
@@ -196,9 +267,10 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, UNUserNo
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        if response.actionIdentifier == restedActionIdentifier {
+        if response.actionIdentifier == completedActionIdentifier,
+           let reminderID = response.notification.request.content.userInfo[reminderIDUserInfoKey] as? String {
             DispatchQueue.main.async {
-                self.markRested()
+                self.markCompleted(reminderID: reminderID)
             }
         }
         completionHandler()
