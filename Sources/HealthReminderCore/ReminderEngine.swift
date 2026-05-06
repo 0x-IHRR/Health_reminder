@@ -3,7 +3,6 @@ import Foundation
 public enum ReminderEngineState: Equatable {
     case tracking
     case pausedByIdle
-    case overdue
 }
 
 public struct ReminderDefinition: Equatable {
@@ -11,20 +10,17 @@ public struct ReminderDefinition: Equatable {
     public let title: String
     public let body: String
     public let interval: TimeInterval
-    public let repeatReminderInterval: TimeInterval
 
     public init(
         id: String,
         title: String,
         body: String,
-        interval: TimeInterval,
-        repeatReminderInterval: TimeInterval
+        interval: TimeInterval
     ) {
         self.id = id
         self.title = title
         self.body = body
         self.interval = interval
-        self.repeatReminderInterval = repeatReminderInterval
     }
 }
 
@@ -70,10 +66,6 @@ public struct ReminderEngine {
         records.map(\.progress)
     }
 
-    public var currentOverdueReminder: ReminderProgress? {
-        reminders.first { $0.state == .overdue }
-    }
-
     public var nextReminder: ReminderProgress? {
         reminders
             .filter { $0.state == .tracking }
@@ -102,21 +94,8 @@ public struct ReminderEngine {
         return ReminderTickResult(remindersToSend: remindersToSend)
     }
 
-    public mutating func markCompleted(reminderID: String) {
-        guard let index = records.firstIndex(where: { $0.definition.id == reminderID }) else {
-            return
-        }
-
-        records[index].reset()
-        updateOverallState(isIdle: false)
-    }
-
     private mutating func updateOverallState(isIdle: Bool) {
-        if records.contains(where: { $0.state == .overdue }) {
-            state = .overdue
-        } else {
-            state = isIdle ? .pausedByIdle : .tracking
-        }
+        state = isIdle ? .pausedByIdle : .tracking
     }
 }
 
@@ -124,13 +103,11 @@ private struct ReminderRecord {
     let definition: ReminderDefinition
     private(set) var elapsedActiveTime: TimeInterval
     private(set) var state: ReminderEngineState
-    private var elapsedSinceLastReminder: TimeInterval?
 
     init(definition: ReminderDefinition) {
         self.definition = definition
         self.elapsedActiveTime = 0
         self.state = .tracking
-        self.elapsedSinceLastReminder = nil
     }
 
     var progress: ReminderProgress {
@@ -142,16 +119,11 @@ private struct ReminderRecord {
     }
 
     mutating func tick(tickInterval: TimeInterval) -> ReminderDefinition? {
-        if state == .overdue {
-            return tickOverdue(tickInterval: tickInterval)
-        }
-
         state = .tracking
         elapsedActiveTime += tickInterval
 
         if elapsedActiveTime >= definition.interval {
-            state = .overdue
-            elapsedSinceLastReminder = 0
+            reset()
             return definition
         }
 
@@ -161,22 +133,5 @@ private struct ReminderRecord {
     mutating func reset() {
         elapsedActiveTime = 0
         state = .tracking
-        elapsedSinceLastReminder = nil
-    }
-
-    private mutating func tickOverdue(tickInterval: TimeInterval) -> ReminderDefinition? {
-        guard let currentElapsedSinceLastReminder = elapsedSinceLastReminder else {
-            elapsedSinceLastReminder = 0
-            return definition
-        }
-
-        let nextElapsedSinceLastReminder = currentElapsedSinceLastReminder + tickInterval
-        if nextElapsedSinceLastReminder >= definition.repeatReminderInterval {
-            elapsedSinceLastReminder = 0
-            return definition
-        }
-
-        elapsedSinceLastReminder = nextElapsedSinceLastReminder
-        return nil
     }
 }

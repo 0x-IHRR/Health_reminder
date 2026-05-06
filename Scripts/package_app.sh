@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_NAME="HealthReminder"
-APP_VERSION="0.2.0"
+APP_VERSION="0.3.0"
 APP_DIR="$ROOT_DIR/build/$APP_NAME.app"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"

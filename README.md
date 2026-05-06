@@ -1,6 +1,6 @@
 # HealthReminder
 
-一个极简 macOS 菜单栏健康提醒应用：按正在操作电脑的累计时间，提醒护眼、活动、坐姿、喝水和肩颈放松。用户点击“已完成”后，对应提醒开始下一轮计时。
+一个极简 macOS 菜单栏健康提醒应用：按正在操作电脑的累计时间，轻量提醒护眼活动、喝水和坐姿肩颈放松。提醒发出后会自动进入下一轮计时。
 
 ## 运行
 
@@ -21,14 +21,11 @@ open build/HealthReminder.app
 - 所有提醒都按键盘或鼠标活跃使用时间累计。
 - 离开电脑超过 60 秒时暂停累计。
 - 内置提醒：
-  - 眨眼 / 放松眼睛：10 分钟
-  - 看远处 / 起身活动：20 分钟
-  - 调整坐姿：30 分钟
-  - 喝水：45 分钟
-  - 放松肩颈：60 分钟
-- 到点后必须点击通知或菜单里的“已完成”，对应提醒才会重新开始下一轮。
-- 忽略提醒时，对应提醒每 5 分钟重复一次。
-- 多个提醒独立计时，完成其中一个不会重置其他提醒。
+  - 放松眼睛 / 起身活动：30 分钟
+  - 喝水：60 分钟
+  - 调整坐姿 / 放松肩颈：90 分钟
+- 提醒发出后自动进入下一轮，不需要手动确认。
+- 多个提醒独立计时，其中一个提醒触发不会重置其他提醒。
 - 从 `.app` 启动时，会写入用户的 `LaunchAgents`，下次登录后自动启动。
 
 ## 开发
@@ -45,7 +42,7 @@ swift test
 ```bash
 bash Scripts/package_app.sh
 mkdir -p release
-hdiutil create -volname HealthReminder -srcfolder build/HealthReminder.app -ov -format UDZO release/HealthReminder-0.2.0.dmg
+hdiutil create -volname HealthReminder -srcfolder build/HealthReminder.app -ov -format UDZO release/HealthReminder-0.3.0.dmg
 ```
 
 发布新版本时，确认 `Scripts/package_app.sh` 中的版本号、Git tag、DMG 文件名和 GitHub Release 版本一致。

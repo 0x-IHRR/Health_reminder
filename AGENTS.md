@@ -48,7 +48,7 @@ Use Swift 5 language mode with 4-space indentation. Keep AppKit-specific code in
 
 ## Testing Guidelines
 
-Use XCTest. Test files should mirror the type under test, for example `ReminderEngineTests.swift`. Add tests for any change to reminder timing, idle detection rules, repeat reminders, per-reminder completion, or reset behavior. Run `swift test` before committing.
+Use XCTest. Test files should mirror the type under test, for example `ReminderEngineTests.swift`. Add tests for any change to reminder timing, idle detection rules, automatic reminder reset, or reset behavior. Run `swift test` before committing.
 
 ## Commit & Pull Request Guidelines
 
