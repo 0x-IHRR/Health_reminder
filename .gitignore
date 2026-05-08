@@ -4,3 +4,6 @@ build/
 DerivedData/
 .spec-workflow/
 *.dmg
+*.zip
+Windows/**/bin/
+Windows/**/obj/
