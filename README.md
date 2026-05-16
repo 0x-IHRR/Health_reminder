@@ -32,6 +32,7 @@ Windows 版是自包含包，不需要额外安装 .NET。第一次运行后会�
 - 所有提醒都按键盘或鼠标活跃使用时间累计。
 - 离开电脑超过 60 秒时暂停累计。
 - macOS 版提醒以屏幕中央温和浮层显示，自动淡出，不需要点击确认。
+- macOS 浮层出现时会播放短暂轻粒子凝聚动画，随后保持安静显示。
 - 内置提醒：
   - 放松眼睛 / 起身活动：30 分钟
   - 喝水：60 分钟
@@ -42,6 +43,23 @@ Windows 版是自包含包，不需要额外安装 .NET。第一次运行后会�
 - macOS 版可以从 Obsidian Kanban 的 `## 收件箱` 中只读选择未完成任务，不会修改 Obsidian 文件。
 - 从 `.app` 启动时，会写入用户的 `LaunchAgents`，下次登录后自动启动。
 - Windows 版会写入当前用户的 `Run` 启动项，下次登录后自动启动。
+
+## macOS 本地配置
+
+macOS 版可以读取本地配置文件覆盖默认参数：
+
+```bash
+mkdir -p ~/.config/HealthReminder
+cp config.example.env ~/.config/HealthReminder/config.env
+```
+
+配置文件只支持简单的 `KEY=value`，不支持 `15 * 60` 这类表达式。非法值会被忽略并回退到默认值。常用参数包括：
+
+- `FOCUS_REMINDER_INTERVAL_SECONDS`：主线任务召回间隔。
+- `KANBAN_PATH`：Obsidian Kanban 文件路径。
+- `KANBAN_INBOX_SECTION`：候选任务来源 section，默认 `收件箱`。
+- `OVERLAY_PARTICLE_STYLE`：浮层粒子效果，支持 `light` 或 `off`。
+- `OVERLAY_DISPLAY_SECONDS`、`OVERLAY_WIDTH`、`OVERLAY_HEIGHT`：浮层显示时间和尺寸。
 
 ## 开发
 

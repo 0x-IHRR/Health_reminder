@@ -1,4 +1,5 @@
 import AppKit
+import HealthReminderCore
 import QuartzCore
 
 final class ReminderOverlayPresenter {
@@ -7,8 +8,13 @@ final class ReminderOverlayPresenter {
         let body: String
     }
 
+    private let configuration: AppConfiguration.Overlay
     private var queue: [OverlayMessage] = []
     private var isShowing = false
+
+    init(configuration: AppConfiguration.Overlay = .defaults) {
+        self.configuration = configuration
+    }
 
     func show(title: String, body: String) {
         DispatchQueue.main.async {
@@ -30,25 +36,26 @@ final class ReminderOverlayPresenter {
         panel.orderFrontRegardless()
 
         if let contentView = panel.contentView {
+            startParticleAnimation(in: contentView)
             contentView.layer?.transform = CATransform3DMakeScale(0.92, 0.92, 1)
 
             let scaleAnimation = CABasicAnimation(keyPath: "transform.scale")
             scaleAnimation.fromValue = 0.92
             scaleAnimation.toValue = 1
-            scaleAnimation.duration = 0.45
+            scaleAnimation.duration = max(configuration.fadeInSeconds, configuration.particleDurationSeconds)
             scaleAnimation.timingFunction = CAMediaTimingFunction(name: .easeOut)
             contentView.layer?.add(scaleAnimation, forKey: "scaleIn")
             contentView.layer?.transform = CATransform3DIdentity
         }
 
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.35
+            context.duration = configuration.fadeInSeconds
             panel.animator().alphaValue = 1
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + configuration.displaySeconds) {
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.5
+                context.duration = self.configuration.fadeOutSeconds
                 panel.animator().alphaValue = 0
             } completionHandler: {
                 panel.close()
@@ -59,7 +66,7 @@ final class ReminderOverlayPresenter {
     }
 
     private func makePanel(for message: OverlayMessage) -> NSPanel {
-        let size = NSSize(width: 420, height: 132)
+        let size = NSSize(width: configuration.width, height: configuration.height)
         let frame = centeredFrame(size: size)
         let panel = NSPanel(
             contentRect: frame,
@@ -79,6 +86,72 @@ final class ReminderOverlayPresenter {
         panel.contentView = makeContentView(for: message, size: size)
 
         return panel
+    }
+
+    private func startParticleAnimation(in contentView: NSView) {
+        guard configuration.particleStyle != "off", let layer = contentView.layer else {
+            return
+        }
+
+        let emitter = CAEmitterLayer()
+        emitter.emitterShape = .circle
+        emitter.emitterMode = .outline
+        emitter.emitterPosition = CGPoint(x: contentView.bounds.midX, y: contentView.bounds.midY)
+        emitter.emitterSize = CGSize(
+            width: contentView.bounds.width * 0.75,
+            height: contentView.bounds.height * 0.75
+        )
+        emitter.beginTime = CACurrentMediaTime()
+        emitter.birthRate = 1
+        emitter.zPosition = 0
+
+        let cell = CAEmitterCell()
+        cell.birthRate = Float(configuration.particleBirthRate)
+        cell.lifetime = Float(configuration.particleLifetimeSeconds)
+        cell.lifetimeRange = Float(configuration.particleLifetimeSeconds * 0.25)
+        cell.velocity = CGFloat(configuration.particleVelocity)
+        cell.velocityRange = CGFloat(configuration.particleVelocity * 0.35)
+        cell.emissionRange = .pi * 2
+        cell.scale = CGFloat(configuration.particleScale)
+        cell.scaleRange = CGFloat(configuration.particleScale * 0.6)
+        cell.alphaSpeed = -0.9
+        cell.contents = particleImage().cgImage(forProposedRect: nil, context: nil, hints: nil)
+        cell.color = NSColor(calibratedRed: 0.58, green: 0.95, blue: 0.86, alpha: 0.72).cgColor
+
+        emitter.emitterCells = [cell]
+        layer.insertSublayer(emitter, at: 0)
+
+        let sizeAnimation = CABasicAnimation(keyPath: "emitterSize")
+        sizeAnimation.fromValue = emitter.emitterSize
+        sizeAnimation.toValue = CGSize(width: 24, height: 24)
+        sizeAnimation.duration = configuration.particleDurationSeconds
+        sizeAnimation.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        emitter.add(sizeAnimation, forKey: "particleGather")
+        emitter.emitterSize = CGSize(width: 24, height: 24)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + configuration.particleDurationSeconds) {
+            emitter.birthRate = 0
+        }
+    }
+
+    private func particleImage() -> NSImage {
+        let size = NSSize(width: 14, height: 14)
+        let image = NSImage(size: size)
+
+        image.lockFocus()
+        defer {
+            image.unlockFocus()
+        }
+
+        let bounds = NSRect(origin: .zero, size: size)
+        let gradient = NSGradient(colors: [
+            NSColor.white.withAlphaComponent(0.95),
+            NSColor(calibratedRed: 0.58, green: 0.95, blue: 0.86, alpha: 0.35),
+            .clear
+        ])
+        gradient?.draw(in: NSBezierPath(ovalIn: bounds), angle: 0)
+
+        return image
     }
 
     private func makeContentView(for message: OverlayMessage, size: NSSize) -> NSView {
@@ -130,4 +203,8 @@ final class ReminderOverlayPresenter {
             height: size.height
         )
     }
+}
+
+private extension AppConfiguration.Overlay {
+    static let defaults = AppConfiguration.defaults.overlay
 }

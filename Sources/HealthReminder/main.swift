@@ -4,39 +4,13 @@ import Foundation
 import HealthReminderCore
 
 private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
-    private let reminderDefinitions: [ReminderDefinition] = [
-        ReminderDefinition(
-            id: "movement-break",
-            title: "放松眼睛，活动一下",
-            body: "看一下远处，站起来动一动。",
-            interval: 30 * 60
-        ),
-        ReminderDefinition(
-            id: "water",
-            title: "喝水",
-            body: "喝几口水，别等口渴了再喝。",
-            interval: 60 * 60
-        ),
-        ReminderDefinition(
-            id: "posture-relax",
-            title: "调整坐姿，放松肩颈",
-            body: "坐直一点，转转脖子，活动一下肩膀。",
-            interval: 90 * 60
-        )
-    ]
-
-    private let defaultKanbanURL = URL(
-        fileURLWithPath: "/Users/ihrr/Library/Mobile Documents/iCloud~md~obsidian/Documents/起源之地/0x.Start/_Meta/Kanban.md"
-    )
-    private let focusReminderInterval: TimeInterval = 15 * 60
-    private let idleThreshold: TimeInterval = 60
-    private let tickInterval: TimeInterval = 1
+    private let configuration = AppConfiguration.load(from: AppConfiguration.localConfigURL)
     private let anyInputEventType = CGEventType(rawValue: UInt32.max)!
     private let bundleIdentifier = "com.healthreminder.app"
 
     private let focusTaskStore = FocusTaskStore()
     private let kanbanTaskReader = KanbanTaskReader()
-    private let overlayPresenter = ReminderOverlayPresenter()
+    private lazy var overlayPresenter = ReminderOverlayPresenter(configuration: configuration.overlay)
 
     private var statusItem: NSStatusItem!
     private var statusMenu = NSMenu()
@@ -51,14 +25,14 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         reminderEngine = ReminderEngine(
-            reminders: reminderDefinitions,
-            idleThreshold: idleThreshold,
-            tickInterval: tickInterval
+            reminders: reminderDefinitions(),
+            idleThreshold: configuration.idleThreshold,
+            tickInterval: configuration.tickInterval
         )
         focusReminderEngine = FocusReminderEngine(
-            interval: focusReminderInterval,
-            idleThreshold: idleThreshold,
-            tickInterval: tickInterval,
+            interval: configuration.focusReminderInterval,
+            idleThreshold: configuration.idleThreshold,
+            tickInterval: configuration.tickInterval,
             currentTask: focusTaskStore.currentTask
         )
         configureMenuBar()
@@ -150,7 +124,7 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
     }
 
     private func startTimer() {
-        timer = Timer.scheduledTimer(withTimeInterval: tickInterval, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: configuration.tickInterval, repeats: true) { [weak self] _ in
             self?.tick()
         }
         RunLoop.main.add(timer!, forMode: .common)
@@ -179,7 +153,10 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
         kanbanMenu.removeAllItems()
 
         do {
-            let tasks = try kanbanTaskReader.readInboxTasks(from: defaultKanbanURL)
+            let tasks = try kanbanTaskReader.readInboxTasks(
+                from: URL(fileURLWithPath: configuration.kanbanPath),
+                inboxSectionTitle: configuration.kanbanInboxSection
+            )
 
             guard !tasks.isEmpty else {
                 kanbanMenu.addItem(disabledItem(title: "收件箱没有未完成任务"))
@@ -266,7 +243,7 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
         }
 
         if let task = focusReminderEngine.currentTask {
-            let remaining = max(0, focusReminderInterval - focusReminderEngine.elapsedActiveTime)
+            let remaining = max(0, configuration.focusReminderInterval - focusReminderEngine.elapsedActiveTime)
             focusStatusMenuItem.title = "主线：\(task.title)，约 \(minutesText(for: remaining))后召回"
             completeFocusTaskItem.isEnabled = true
         } else {
@@ -285,6 +262,36 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
             refreshKanbanSubmenu()
             updateMenu()
         }
+    }
+
+    private func reminderDefinitions() -> [ReminderDefinition] {
+        [
+            ReminderDefinition(
+                id: "movement-break",
+                title: "放松眼睛，活动一下",
+                body: "看一下远处，站起来动一动。",
+                interval: configuration.movementInterval
+            ),
+            ReminderDefinition(
+                id: "water",
+                title: "喝水",
+                body: "喝几口水，别等口渴了再喝。",
+                interval: configuration.waterInterval
+            ),
+            ReminderDefinition(
+                id: "posture-relax",
+                title: "调整坐姿，放松肩颈",
+                body: "坐直一点，转转脖子，活动一下肩膀。",
+                interval: configuration.postureInterval
+            )
+        ]
+    }
+}
+
+private extension AppConfiguration {
+    static var localConfigURL: URL {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".config/HealthReminder/config.env")
     }
 }
 

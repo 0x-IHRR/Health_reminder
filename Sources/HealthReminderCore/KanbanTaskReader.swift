@@ -3,14 +3,21 @@ import Foundation
 public struct KanbanTaskReader {
     public init() {}
 
-    public func readInboxTasks(from url: URL) throws -> [String] {
+    public func readInboxTasks(
+        from url: URL,
+        inboxSectionTitle: String = AppConfiguration.defaults.kanbanInboxSection
+    ) throws -> [String] {
         let contents = try String(contentsOf: url, encoding: .utf8)
-        return parseInboxTasks(from: contents)
+        return parseInboxTasks(from: contents, inboxSectionTitle: inboxSectionTitle)
     }
 
-    public func parseInboxTasks(from contents: String) -> [String] {
+    public func parseInboxTasks(
+        from contents: String,
+        inboxSectionTitle: String = AppConfiguration.defaults.kanbanInboxSection
+    ) -> [String] {
         var isInsideInbox = false
         var tasks: [String] = []
+        let sectionHeading = "## \(inboxSectionTitle)"
 
         for rawLine in contents.components(separatedBy: .newlines) {
             let line = rawLine.trimmingCharacters(in: .whitespaces)
@@ -19,7 +26,7 @@ public struct KanbanTaskReader {
                 if isInsideInbox {
                     break
                 }
-                isInsideInbox = line == "## 收件箱"
+                isInsideInbox = line == sectionHeading
                 continue
             }
 

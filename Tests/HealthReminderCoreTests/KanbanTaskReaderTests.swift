@@ -66,4 +66,24 @@ final class KanbanTaskReaderTests: XCTestCase {
         XCTAssertEqual(tasks, ["只读任务"])
         XCTAssertEqual(after, before)
     }
+
+    func testReadsCustomInboxSectionTitle() {
+        let markdown = """
+        ## 收件箱
+        - [ ] 默认收件箱任务
+
+        ## Inbox
+        - [ ] Custom task
+
+        ## Done
+        - [ ] Ignored task
+        """
+
+        let tasks = KanbanTaskReader().parseInboxTasks(
+            from: markdown,
+            inboxSectionTitle: "Inbox"
+        )
+
+        XCTAssertEqual(tasks, ["Custom task"])
+    }
 }
