@@ -2,9 +2,8 @@ import AppKit
 import CoreGraphics
 import Foundation
 import HealthReminderCore
-import UserNotifications
 
-private final class HealthReminderApp: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
+private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let reminderDefinitions: [ReminderDefinition] = [
         ReminderDefinition(
             id: "movement-break",
@@ -26,16 +25,27 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, UNUserNo
         )
     ]
 
+    private let defaultKanbanURL = URL(
+        fileURLWithPath: "/Users/ihrr/Library/Mobile Documents/iCloud~md~obsidian/Documents/起源之地/0x.Start/_Meta/Kanban.md"
+    )
+    private let focusReminderInterval: TimeInterval = 15 * 60
     private let idleThreshold: TimeInterval = 60
     private let tickInterval: TimeInterval = 1
     private let anyInputEventType = CGEventType(rawValue: UInt32.max)!
     private let bundleIdentifier = "com.healthreminder.app"
-    private let notificationCategoryIdentifier = "HEALTH_REMINDER_CATEGORY"
+
+    private let focusTaskStore = FocusTaskStore()
+    private let kanbanTaskReader = KanbanTaskReader()
+    private let overlayPresenter = ReminderOverlayPresenter()
 
     private var statusItem: NSStatusItem!
     private var statusMenu = NSMenu()
     private var statusMenuItem = NSMenuItem()
+    private var focusStatusMenuItem = NSMenuItem()
+    private var kanbanMenu = NSMenu()
+    private var completeFocusTaskItem = NSMenuItem()
     private var reminderEngine: ReminderEngine!
+    private var focusReminderEngine: FocusReminderEngine!
     private var timer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -45,8 +55,13 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, UNUserNo
             idleThreshold: idleThreshold,
             tickInterval: tickInterval
         )
+        focusReminderEngine = FocusReminderEngine(
+            interval: focusReminderInterval,
+            idleThreshold: idleThreshold,
+            tickInterval: tickInterval,
+            currentTask: focusTaskStore.currentTask
+        )
         configureMenuBar()
-        configureNotifications()
         installLaunchAgentIfRunningFromAppBundle()
         startTimer()
     }
@@ -58,36 +73,43 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, UNUserNo
         statusItem.button?.image = icon
         statusItem.button?.imagePosition = .imageOnly
 
+        statusMenu.delegate = self
+
         statusMenuItem.isEnabled = false
+        focusStatusMenuItem.isEnabled = false
         statusMenu.addItem(statusMenuItem)
+        statusMenu.addItem(focusStatusMenuItem)
+        statusMenu.addItem(.separator())
+
+        let setFocusTaskItem = NSMenuItem(
+            title: "设置当前主线任务...",
+            action: #selector(promptForFocusTask),
+            keyEquivalent: ""
+        )
+        setFocusTaskItem.target = self
+        statusMenu.addItem(setFocusTaskItem)
+
+        let kanbanMenuItem = NSMenuItem(title: "从 Obsidian 收件箱选择", action: nil, keyEquivalent: "")
+        kanbanMenu.delegate = self
+        statusMenu.addItem(kanbanMenuItem)
+        statusMenu.setSubmenu(kanbanMenu, for: kanbanMenuItem)
+
+        completeFocusTaskItem = NSMenuItem(
+            title: "完成当前主线任务",
+            action: #selector(completeCurrentFocusTask),
+            keyEquivalent: ""
+        )
+        completeFocusTaskItem.target = self
+        statusMenu.addItem(completeFocusTaskItem)
+        statusMenu.addItem(.separator())
 
         let quitItem = NSMenuItem(title: "退出", action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
         statusMenu.addItem(quitItem)
 
         statusItem.menu = statusMenu
+        refreshKanbanSubmenu()
         updateMenu()
-    }
-
-    private func configureNotifications() {
-        let category = UNNotificationCategory(
-            identifier: notificationCategoryIdentifier,
-            actions: [],
-            intentIdentifiers: [],
-            options: []
-        )
-
-        let center = UNUserNotificationCenter.current()
-        center.delegate = self
-        center.setNotificationCategories([category])
-        center.requestAuthorization(options: [.alert, .sound]) { granted, error in
-            if let error {
-                NSLog("HealthReminder notification authorization failed: \(error.localizedDescription)")
-            }
-            if !granted {
-                NSLog("HealthReminder notification authorization was not granted.")
-            }
-        }
     }
 
     private func installLaunchAgentIfRunningFromAppBundle() {
@@ -139,35 +161,90 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, UNUserNo
             .combinedSessionState,
             eventType: anyInputEventType
         )
-        let result = reminderEngine.tick(idleSeconds: idleSeconds)
 
-        for reminder in result.remindersToSend {
-            sendReminderNotification(for: reminder)
+        let healthResult = reminderEngine.tick(idleSeconds: idleSeconds)
+        for reminder in healthResult.remindersToSend {
+            overlayPresenter.show(title: reminder.title, body: reminder.body)
+        }
+
+        let focusResult = focusReminderEngine.tick(idleSeconds: idleSeconds)
+        if let task = focusResult.taskToRemind {
+            overlayPresenter.show(title: "回到主线任务", body: task.title)
         }
 
         updateMenu()
     }
 
-    private func sendReminderNotification(for reminder: ReminderDefinition) {
-        let content = UNMutableNotificationContent()
-        content.title = reminder.title
-        content.body = reminder.body
-        content.sound = .default
-        content.categoryIdentifier = notificationCategoryIdentifier
+    private func refreshKanbanSubmenu() {
+        kanbanMenu.removeAllItems()
 
-        let requestIdentifier = "health-reminder-\(reminder.id)-\(UUID().uuidString)"
+        do {
+            let tasks = try kanbanTaskReader.readInboxTasks(from: defaultKanbanURL)
 
-        let request = UNNotificationRequest(
-            identifier: requestIdentifier,
-            content: content,
-            trigger: nil
-        )
-
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error {
-                NSLog("HealthReminder notification delivery failed: \(error.localizedDescription)")
+            guard !tasks.isEmpty else {
+                kanbanMenu.addItem(disabledItem(title: "收件箱没有未完成任务"))
+                return
             }
+
+            for task in tasks {
+                let item = NSMenuItem(title: task, action: #selector(selectKanbanTask(_:)), keyEquivalent: "")
+                item.target = self
+                item.representedObject = task
+                kanbanMenu.addItem(item)
+            }
+        } catch {
+            kanbanMenu.addItem(disabledItem(title: "无法读取 Kanban：\(error.localizedDescription)"))
         }
+    }
+
+    private func disabledItem(title: String) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        item.isEnabled = false
+        return item
+    }
+
+    private func setCurrentFocusTaskTitle(_ title: String?) {
+        let trimmedTitle = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let task = trimmedTitle.isEmpty ? nil : FocusTask(title: trimmedTitle)
+
+        focusTaskStore.setCurrentTask(task)
+        focusReminderEngine.setTask(task)
+        updateMenu()
+
+        if let task {
+            overlayPresenter.show(title: "已设置主线任务", body: task.title)
+        }
+    }
+
+    @objc private func promptForFocusTask() {
+        let alert = NSAlert()
+        alert.messageText = "设置当前主线任务"
+        alert.informativeText = "只保存一个当前主线任务；设置后按 15 分钟活跃时间召回。"
+        alert.addButton(withTitle: "保存")
+        alert.addButton(withTitle: "取消")
+
+        let input = NSTextField(frame: NSRect(x: 0, y: 0, width: 360, height: 24))
+        input.stringValue = focusReminderEngine.currentTask?.title ?? ""
+        alert.accessoryView = input
+
+        NSApp.activate(ignoringOtherApps: true)
+
+        if alert.runModal() == .alertFirstButtonReturn {
+            setCurrentFocusTaskTitle(input.stringValue)
+        }
+    }
+
+    @objc private func selectKanbanTask(_ sender: NSMenuItem) {
+        guard let title = sender.representedObject as? String else {
+            return
+        }
+
+        setCurrentFocusTaskTitle(title)
+    }
+
+    @objc private func completeCurrentFocusTask() {
+        setCurrentFocusTaskTitle(nil)
+        overlayPresenter.show(title: "主线任务已完成", body: "选择下一条主线前，召回提醒会暂停。")
     }
 
     @objc private func quit() {
@@ -187,6 +264,15 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, UNUserNo
             statusMenuItem.title = "已离开，计时暂停"
             statusItem.button?.contentTintColor = NSColor.systemBlue
         }
+
+        if let task = focusReminderEngine.currentTask {
+            let remaining = max(0, focusReminderInterval - focusReminderEngine.elapsedActiveTime)
+            focusStatusMenuItem.title = "主线：\(task.title)，约 \(minutesText(for: remaining))后召回"
+            completeFocusTaskItem.isEnabled = true
+        } else {
+            focusStatusMenuItem.title = "主线：未设置"
+            completeFocusTaskItem.isEnabled = false
+        }
     }
 
     private func minutesText(for seconds: TimeInterval) -> String {
@@ -194,20 +280,11 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, UNUserNo
         return "\(remainingMinutes) 分钟"
     }
 
-    func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse,
-        withCompletionHandler completionHandler: @escaping () -> Void
-    ) {
-        completionHandler()
-    }
-
-    func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification,
-        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
-    ) {
-        completionHandler([.banner, .sound])
+    func menuWillOpen(_ menu: NSMenu) {
+        if menu === statusMenu || menu === kanbanMenu {
+            refreshKanbanSubmenu()
+            updateMenu()
+        }
     }
 }
 

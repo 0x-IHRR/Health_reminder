@@ -20,8 +20,6 @@ bash Scripts/package_app.sh
 open build/HealthReminder.app
 ```
 
-第一次运行时，macOS 会请求通知权限。允许后，提醒会以系统通知形式出现。
-
 ### Windows
 
 下载 GitHub Releases 中的 `HealthReminder-<version>-win-x64.zip`，解压后运行 `HealthReminder.exe`。
@@ -33,12 +31,15 @@ Windows 版是自包含包，不需要额外安装 .NET。第一次运行后会�
 - macOS 版常驻菜单栏，Windows 版常驻系统托盘，不显示主窗口。
 - 所有提醒都按键盘或鼠标活跃使用时间累计。
 - 离开电脑超过 60 秒时暂停累计。
+- macOS 版提醒以屏幕中央温和浮层显示，自动淡出，不需要点击确认。
 - 内置提醒：
   - 放松眼睛 / 起身活动：30 分钟
   - 喝水：60 分钟
   - 调整坐姿 / 放松肩颈：90 分钟
 - 提醒发出后自动进入下一轮，不需要手动确认。
 - 多个提醒独立计时，其中一个提醒触发不会重置其他提醒。
+- macOS 版可以设置一个当前主线任务，按 15 分钟活跃时间召回；完成后会停止召回，直到重新设置任务。
+- macOS 版可以从 Obsidian Kanban 的 `## 收件箱` 中只读选择未完成任务，不会修改 Obsidian 文件。
 - 从 `.app` 启动时，会写入用户的 `LaunchAgents`，下次登录后自动启动。
 - Windows 版会写入当前用户的 `Run` 启动项，下次登录后自动启动。
 
