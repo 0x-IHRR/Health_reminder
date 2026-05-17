@@ -11,6 +11,12 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
     private let focusTaskStore = FocusTaskStore()
     private let kanbanTaskReader = KanbanTaskReader()
     private lazy var overlayPresenter = ReminderOverlayPresenter(configuration: configuration.overlay)
+    private lazy var overlaySettingsWindowController = OverlaySettingsWindowController(
+        configURL: AppConfiguration.localConfigURL,
+        testReminderHandler: { [weak self] title, body in
+            self?.overlayPresenter.show(title: title, body: body)
+        }
+    )
 
     private var statusItem: NSStatusItem!
     private var statusMenu = NSMenu()
@@ -42,9 +48,7 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
 
     private func configureMenuBar() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        let icon = NSImage(systemSymbolName: "figure.walk.motion", accessibilityDescription: "健康提醒")
-        icon?.isTemplate = true
-        statusItem.button?.image = icon
+        statusItem.button?.image = statusBarIcon()
         statusItem.button?.imagePosition = .imageOnly
 
         statusMenu.delegate = self
@@ -77,6 +81,10 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
         statusMenu.addItem(completeFocusTaskItem)
         statusMenu.addItem(.separator())
 
+        let settingsItem = NSMenuItem(title: "设置...", action: #selector(showSettings), keyEquivalent: ",")
+        settingsItem.target = self
+        statusMenu.addItem(settingsItem)
+
         let quitItem = NSMenuItem(title: "退出", action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
         statusMenu.addItem(quitItem)
@@ -84,6 +92,18 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
         statusItem.menu = statusMenu
         refreshKanbanSubmenu()
         updateMenu()
+    }
+
+    private func statusBarIcon() -> NSImage? {
+        if let icon = NSImage(named: "StatusBarIcon") {
+            icon.isTemplate = true
+            icon.size = NSSize(width: 18, height: 18)
+            return icon
+        }
+
+        let fallbackIcon = NSImage(systemSymbolName: "figure.walk.motion", accessibilityDescription: "健康提醒")
+        fallbackIcon?.isTemplate = true
+        return fallbackIcon
     }
 
     private func installLaunchAgentIfRunningFromAppBundle() {
@@ -137,13 +157,12 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
         )
 
         let healthResult = reminderEngine.tick(idleSeconds: idleSeconds)
-        for reminder in healthResult.remindersToSend {
-            overlayPresenter.show(title: reminder.title, body: reminder.body)
-        }
-
         let focusResult = focusReminderEngine.tick(idleSeconds: idleSeconds)
-        if let task = focusResult.taskToRemind {
-            overlayPresenter.show(title: "回到主线任务", body: task.title)
+        if let message = ReminderPresentationComposer.compose(
+            healthReminders: healthResult.remindersToSend,
+            focusTask: focusResult.taskToRemind
+        ) {
+            overlayPresenter.show(title: message.title, body: message.body)
         }
 
         updateMenu()
@@ -224,6 +243,10 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
         overlayPresenter.show(title: "主线任务已完成", body: "选择下一条主线前，召回提醒会暂停。")
     }
 
+    @objc private func showSettings() {
+        overlaySettingsWindowController.show()
+    }
+
     @objc private func quit() {
         NSApp.terminate(nil)
     }
@@ -265,26 +288,22 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
     }
 
     private func reminderDefinitions() -> [ReminderDefinition] {
-        [
-            ReminderDefinition(
-                id: "movement-break",
-                title: "放松眼睛，活动一下",
-                body: "看一下远处，站起来动一动。",
-                interval: configuration.movementInterval
-            ),
-            ReminderDefinition(
-                id: "water",
-                title: "喝水",
-                body: "喝几口水，别等口渴了再喝。",
-                interval: configuration.waterInterval
-            ),
-            ReminderDefinition(
-                id: "posture-relax",
-                title: "调整坐姿，放松肩颈",
-                body: "坐直一点，转转脖子，活动一下肩膀。",
-                interval: configuration.postureInterval
+        guard configuration.healthRemindersEnabled else {
+            return []
+        }
+
+        return configuration.healthReminders.compactMap { reminder -> ReminderDefinition? in
+            guard reminder.isEnabled else {
+                return nil
+            }
+
+            return ReminderDefinition(
+                id: reminder.id,
+                title: reminder.title,
+                body: reminder.body,
+                interval: reminder.interval
             )
-        ]
+        }
     }
 }
 

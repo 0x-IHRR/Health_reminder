@@ -21,7 +21,10 @@ let package = Package(
                 "HealthReminderCore",
                 .product(name: "Vortex", package: "Vortex")
             ],
-            path: "Sources/HealthReminder"
+            path: "Sources/HealthReminder",
+            resources: [
+                .process("Resources")
+            ]
         ),
         .testTarget(
             name: "HealthReminderCoreTests",

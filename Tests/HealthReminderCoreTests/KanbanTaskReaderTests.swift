@@ -86,4 +86,38 @@ final class KanbanTaskReaderTests: XCTestCase {
 
         XCTAssertEqual(tasks, ["Custom task"])
     }
+
+    func testReadsSectionAtAnyHeadingLevelAndStopsAtSameOrHigherHeading() {
+        let markdown = """
+        # Project
+        ### Inbox
+          + [ ] 缩进加号任务
+          * [ ] 缩进星号任务
+
+        #### Nested
+        - [ ] 子标题下任务
+
+        ### Next
+        - [ ] 不应该读到
+        """
+
+        let tasks = KanbanTaskReader().parseInboxTasks(from: markdown, inboxSectionTitle: "Inbox")
+
+        XCTAssertEqual(tasks, ["缩进加号任务", "缩进星号任务", "子标题下任务"])
+    }
+
+    func testEmptySectionTitleReadsAllUncheckedTasks() {
+        let markdown = """
+        ## Backlog
+        - [ ] A
+        - [x] B
+
+        ## Today
+          + [ ] C
+        """
+
+        let tasks = KanbanTaskReader().parseInboxTasks(from: markdown, inboxSectionTitle: "")
+
+        XCTAssertEqual(tasks, ["A", "C"])
+    }
 }

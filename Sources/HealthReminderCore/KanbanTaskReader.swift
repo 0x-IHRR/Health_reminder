@@ -15,18 +15,25 @@ public struct KanbanTaskReader {
         from contents: String,
         inboxSectionTitle: String = AppConfiguration.defaults.kanbanInboxSection
     ) -> [String] {
-        var isInsideInbox = false
+        let normalizedSectionTitle = inboxSectionTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        var isInsideInbox = normalizedSectionTitle.isEmpty
+        var inboxHeadingLevel: Int?
         var tasks: [String] = []
-        let sectionHeading = "## \(inboxSectionTitle)"
 
         for rawLine in contents.components(separatedBy: .newlines) {
             let line = rawLine.trimmingCharacters(in: .whitespaces)
 
-            if line.hasPrefix("## ") {
-                if isInsideInbox {
+            if let heading = markdownHeading(from: line) {
+                if isInsideInbox,
+                   let inboxHeadingLevel,
+                   heading.level <= inboxHeadingLevel {
                     break
                 }
-                isInsideInbox = line == sectionHeading
+
+                if heading.title == normalizedSectionTitle {
+                    isInsideInbox = true
+                    inboxHeadingLevel = heading.level
+                }
                 continue
             }
 
@@ -43,7 +50,7 @@ public struct KanbanTaskReader {
     }
 
     private func uncheckedTaskTitle(from line: String) -> String? {
-        let prefixes = ["- [ ] ", "* [ ] "]
+        let prefixes = ["- [ ] ", "* [ ] ", "+ [ ] "]
 
         guard let prefix = prefixes.first(where: { line.hasPrefix($0) }) else {
             return nil
@@ -51,5 +58,31 @@ public struct KanbanTaskReader {
 
         let title = line.dropFirst(prefix.count).trimmingCharacters(in: .whitespacesAndNewlines)
         return title.isEmpty ? nil : String(title)
+    }
+
+    private func markdownHeading(from line: String) -> (level: Int, title: String)? {
+        var level = 0
+
+        for character in line {
+            if character == "#" {
+                level += 1
+            } else {
+                break
+            }
+        }
+
+        guard level > 0,
+              level <= 6,
+              line.dropFirst(level).first == " " else {
+            return nil
+        }
+
+        let title = line
+            .dropFirst(level + 1)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "#"))
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return title.isEmpty ? nil : (level, title)
     }
 }
