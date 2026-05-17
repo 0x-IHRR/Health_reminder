@@ -108,13 +108,13 @@ public struct AppConfiguration: Equatable {
             fadeOutSeconds: 0.5,
             width: 420,
             height: 132,
-            theme: "dark_neon",
+            theme: "dark_particle",
             textAlignment: "center",
             position: "upper_center",
             verticalOffsetRatio: 0.18,
             particleStyle: "reconstruct",
-            particleCount: 160,
-            particleCanvasPadding: 180,
+            particleCount: 140,
+            particleCanvasPadding: 220,
             particleBirthRate: 72,
             particleLifetimeSeconds: 1.1,
             particleDurationSeconds: 0.85,
@@ -328,7 +328,12 @@ public struct AppConfiguration: Equatable {
 
     private static func overlayTheme(_ value: String?, defaultValue: String) -> String {
         let normalizedValue = nonEmptyString(value, defaultValue: defaultValue).lowercased()
-        return ["dark_neon"].contains(normalizedValue) ? normalizedValue : defaultValue
+
+        if normalizedValue == "dark_neon" {
+            return "dark_particle"
+        }
+
+        return ["dark_particle", "light_particle"].contains(normalizedValue) ? normalizedValue : defaultValue
     }
 
     private static func textAlignment(_ value: String?, defaultValue: String) -> String {

@@ -25,7 +25,7 @@ final class AppConfigurationTests: XCTestCase {
             OVERLAY_FADE_OUT_SECONDS=0.4
             OVERLAY_WIDTH=500
             OVERLAY_HEIGHT=150
-            OVERLAY_THEME=dark_neon
+            OVERLAY_THEME=light_particle
             OVERLAY_TEXT_ALIGNMENT=center
             OVERLAY_POSITION=upper_center
             OVERLAY_VERTICAL_OFFSET_RATIO=0.2
@@ -53,7 +53,7 @@ final class AppConfigurationTests: XCTestCase {
         XCTAssertEqual(configuration.overlay.fadeOutSeconds, 0.4)
         XCTAssertEqual(configuration.overlay.width, 500)
         XCTAssertEqual(configuration.overlay.height, 150)
-        XCTAssertEqual(configuration.overlay.theme, "dark_neon")
+        XCTAssertEqual(configuration.overlay.theme, "light_particle")
         XCTAssertEqual(configuration.overlay.textAlignment, "center")
         XCTAssertEqual(configuration.overlay.position, "upper_center")
         XCTAssertEqual(configuration.overlay.verticalOffsetRatio, 0.2)
@@ -105,6 +105,12 @@ final class AppConfigurationTests: XCTestCase {
         XCTAssertEqual(configuration.overlay.particleCanvasPadding, AppConfiguration.defaults.overlay.particleCanvasPadding)
         XCTAssertEqual(configuration.overlay.particleBirthRate, AppConfiguration.defaults.overlay.particleBirthRate)
         XCTAssertEqual(configuration.overlay.particleScale, AppConfiguration.defaults.overlay.particleScale)
+    }
+
+    func testLegacyDarkNeonThemeMapsToDarkParticle() {
+        let configuration = AppConfiguration.load(envContents: "OVERLAY_THEME=dark_neon")
+
+        XCTAssertEqual(configuration.overlay.theme, "dark_particle")
     }
 
     func testParseEnvIgnoresCommentsEmptyLinesAndUnknownKeys() {

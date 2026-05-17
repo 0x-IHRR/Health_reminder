@@ -58,12 +58,12 @@ cp config.example.env ~/.config/HealthReminder/config.env
 - `FOCUS_REMINDER_INTERVAL_SECONDS`：主线任务召回间隔。
 - `KANBAN_PATH`：Obsidian Kanban 文件路径。
 - `KANBAN_INBOX_SECTION`：候选任务来源 section，默认 `收件箱`。
-- `OVERLAY_THEME`：浮层视觉主题，默认 `dark_neon`。
+- `OVERLAY_THEME`：浮层视觉主题，支持 `dark_particle`、`light_particle`；旧值 `dark_neon` 会映射到 `dark_particle`。
 - `OVERLAY_TEXT_ALIGNMENT`：浮层文字对齐，默认 `center`。
 - `OVERLAY_POSITION`：浮层位置，默认 `upper_center`。
 - `OVERLAY_VERTICAL_OFFSET_RATIO`：浮层相对屏幕中心向上的偏移比例，默认 `0.18`。
 - `OVERLAY_PARTICLE_STYLE`：浮层粒子效果，支持 `reconstruct`、`light` 或 `off`。
-- `OVERLAY_PARTICLE_COUNT`、`OVERLAY_PARTICLE_CANVAS_PADDING`：粒子数量和卡片外侧粒子画布范围。
+- `OVERLAY_PARTICLE_COUNT`、`OVERLAY_PARTICLE_CANVAS_PADDING`：粒子数量和卡片外侧粒子画布范围，默认适合暗色虚空凝聚效果。
 - `OVERLAY_DISPLAY_SECONDS`、`OVERLAY_WIDTH`、`OVERLAY_HEIGHT`：浮层显示时间和尺寸。
 
 ## 开发
