@@ -9,7 +9,11 @@ public struct AppConfiguration: Equatable {
         public let height: Double
         public let theme: String
         public let textAlignment: String
+        public let position: String
+        public let verticalOffsetRatio: Double
         public let particleStyle: String
+        public let particleCount: Int
+        public let particleCanvasPadding: Double
         public let particleBirthRate: Double
         public let particleLifetimeSeconds: TimeInterval
         public let particleDurationSeconds: TimeInterval
@@ -24,7 +28,11 @@ public struct AppConfiguration: Equatable {
             height: Double,
             theme: String,
             textAlignment: String,
+            position: String,
+            verticalOffsetRatio: Double,
             particleStyle: String,
+            particleCount: Int,
+            particleCanvasPadding: Double,
             particleBirthRate: Double,
             particleLifetimeSeconds: TimeInterval,
             particleDurationSeconds: TimeInterval,
@@ -38,7 +46,11 @@ public struct AppConfiguration: Equatable {
             self.height = height
             self.theme = theme
             self.textAlignment = textAlignment
+            self.position = position
+            self.verticalOffsetRatio = verticalOffsetRatio
             self.particleStyle = particleStyle
+            self.particleCount = particleCount
+            self.particleCanvasPadding = particleCanvasPadding
             self.particleBirthRate = particleBirthRate
             self.particleLifetimeSeconds = particleLifetimeSeconds
             self.particleDurationSeconds = particleDurationSeconds
@@ -98,7 +110,11 @@ public struct AppConfiguration: Equatable {
             height: 132,
             theme: "dark_neon",
             textAlignment: "center",
+            position: "upper_center",
+            verticalOffsetRatio: 0.18,
             particleStyle: "reconstruct",
+            particleCount: 160,
+            particleCanvasPadding: 180,
             particleBirthRate: 72,
             particleLifetimeSeconds: 1.1,
             particleDurationSeconds: 0.85,
@@ -173,9 +189,31 @@ public struct AppConfiguration: Equatable {
                     overrides["OVERLAY_TEXT_ALIGNMENT"],
                     defaultValue: overlayDefaults.textAlignment
                 ),
+                position: overlayPosition(
+                    overrides["OVERLAY_POSITION"],
+                    defaultValue: overlayDefaults.position
+                ),
+                verticalOffsetRatio: boundedDouble(
+                    overrides["OVERLAY_VERTICAL_OFFSET_RATIO"],
+                    defaultValue: overlayDefaults.verticalOffsetRatio,
+                    minimum: 0,
+                    maximum: 0.32
+                ),
                 particleStyle: particleStyle(
                     overrides["OVERLAY_PARTICLE_STYLE"],
                     defaultValue: overlayDefaults.particleStyle
+                ),
+                particleCount: boundedInt(
+                    overrides["OVERLAY_PARTICLE_COUNT"],
+                    defaultValue: overlayDefaults.particleCount,
+                    minimum: 40,
+                    maximum: 260
+                ),
+                particleCanvasPadding: boundedDouble(
+                    overrides["OVERLAY_PARTICLE_CANVAS_PADDING"],
+                    defaultValue: overlayDefaults.particleCanvasPadding,
+                    minimum: 40,
+                    maximum: 280
                 ),
                 particleBirthRate: nonNegativeDouble(
                     overrides["OVERLAY_PARTICLE_BIRTH_RATE"],
@@ -248,6 +286,32 @@ public struct AppConfiguration: Equatable {
         return parsedValue
     }
 
+    private static func boundedDouble(
+        _ value: String?,
+        defaultValue: Double,
+        minimum: Double,
+        maximum: Double
+    ) -> Double {
+        guard let value, let parsedValue = Double(value), parsedValue >= minimum, parsedValue <= maximum else {
+            return defaultValue
+        }
+
+        return parsedValue
+    }
+
+    private static func boundedInt(
+        _ value: String?,
+        defaultValue: Int,
+        minimum: Int,
+        maximum: Int
+    ) -> Int {
+        guard let value, let parsedValue = Int(value), parsedValue >= minimum, parsedValue <= maximum else {
+            return defaultValue
+        }
+
+        return parsedValue
+    }
+
     private static func nonEmptyString(_ value: String?, defaultValue: String) -> String {
         guard let value else {
             return defaultValue
@@ -270,5 +334,10 @@ public struct AppConfiguration: Equatable {
     private static func textAlignment(_ value: String?, defaultValue: String) -> String {
         let normalizedValue = nonEmptyString(value, defaultValue: defaultValue).lowercased()
         return ["center"].contains(normalizedValue) ? normalizedValue : defaultValue
+    }
+
+    private static func overlayPosition(_ value: String?, defaultValue: String) -> String {
+        let normalizedValue = nonEmptyString(value, defaultValue: defaultValue).lowercased()
+        return ["upper_center", "center"].contains(normalizedValue) ? normalizedValue : defaultValue
     }
 }

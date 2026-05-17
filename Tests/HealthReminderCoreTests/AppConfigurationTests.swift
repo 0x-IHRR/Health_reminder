@@ -27,7 +27,11 @@ final class AppConfigurationTests: XCTestCase {
             OVERLAY_HEIGHT=150
             OVERLAY_THEME=dark_neon
             OVERLAY_TEXT_ALIGNMENT=center
+            OVERLAY_POSITION=upper_center
+            OVERLAY_VERTICAL_OFFSET_RATIO=0.2
             OVERLAY_PARTICLE_STYLE=reconstruct
+            OVERLAY_PARTICLE_COUNT=144
+            OVERLAY_PARTICLE_CANVAS_PADDING=160
             OVERLAY_PARTICLE_BIRTH_RATE=12
             OVERLAY_PARTICLE_LIFETIME_SECONDS=0.7
             OVERLAY_PARTICLE_DURATION_SECONDS=0.5
@@ -51,7 +55,11 @@ final class AppConfigurationTests: XCTestCase {
         XCTAssertEqual(configuration.overlay.height, 150)
         XCTAssertEqual(configuration.overlay.theme, "dark_neon")
         XCTAssertEqual(configuration.overlay.textAlignment, "center")
+        XCTAssertEqual(configuration.overlay.position, "upper_center")
+        XCTAssertEqual(configuration.overlay.verticalOffsetRatio, 0.2)
         XCTAssertEqual(configuration.overlay.particleStyle, "reconstruct")
+        XCTAssertEqual(configuration.overlay.particleCount, 144)
+        XCTAssertEqual(configuration.overlay.particleCanvasPadding, 160)
         XCTAssertEqual(configuration.overlay.particleBirthRate, 12)
         XCTAssertEqual(configuration.overlay.particleLifetimeSeconds, 0.7)
         XCTAssertEqual(configuration.overlay.particleDurationSeconds, 0.5)
@@ -71,7 +79,11 @@ final class AppConfigurationTests: XCTestCase {
             OVERLAY_FADE_IN_SECONDS=-0.2
             OVERLAY_THEME=white
             OVERLAY_TEXT_ALIGNMENT=left
+            OVERLAY_POSITION=bottom
+            OVERLAY_VERTICAL_OFFSET_RATIO=2
             OVERLAY_PARTICLE_STYLE=heavy
+            OVERLAY_PARTICLE_COUNT=999
+            OVERLAY_PARTICLE_CANVAS_PADDING=8
             OVERLAY_PARTICLE_BIRTH_RATE=-3
             OVERLAY_PARTICLE_SCALE=0
             """
@@ -86,7 +98,11 @@ final class AppConfigurationTests: XCTestCase {
         XCTAssertEqual(configuration.overlay.fadeInSeconds, AppConfiguration.defaults.overlay.fadeInSeconds)
         XCTAssertEqual(configuration.overlay.theme, AppConfiguration.defaults.overlay.theme)
         XCTAssertEqual(configuration.overlay.textAlignment, AppConfiguration.defaults.overlay.textAlignment)
+        XCTAssertEqual(configuration.overlay.position, AppConfiguration.defaults.overlay.position)
+        XCTAssertEqual(configuration.overlay.verticalOffsetRatio, AppConfiguration.defaults.overlay.verticalOffsetRatio)
         XCTAssertEqual(configuration.overlay.particleStyle, AppConfiguration.defaults.overlay.particleStyle)
+        XCTAssertEqual(configuration.overlay.particleCount, AppConfiguration.defaults.overlay.particleCount)
+        XCTAssertEqual(configuration.overlay.particleCanvasPadding, AppConfiguration.defaults.overlay.particleCanvasPadding)
         XCTAssertEqual(configuration.overlay.particleBirthRate, AppConfiguration.defaults.overlay.particleBirthRate)
         XCTAssertEqual(configuration.overlay.particleScale, AppConfiguration.defaults.overlay.particleScale)
     }

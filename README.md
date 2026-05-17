@@ -31,8 +31,8 @@ Windows 版是自包含包，不需要额外安装 .NET。第一次运行后会�
 - macOS 版常驻菜单栏，Windows 版常驻系统托盘，不显示主窗口。
 - 所有提醒都按键盘或鼠标活跃使用时间累计。
 - 离开电脑超过 60 秒时暂停累计。
-- macOS 版提醒以屏幕中央暗色浮层显示，文字居中，自动淡出，不需要点击确认。
-- macOS 浮层出现时会播放短暂轻粒子重构动画，退出时粒子散开，阅读阶段保持安静。
+- macOS 版提醒以屏幕中上方暗色浮层显示，文字居中，自动淡出，不需要点击确认。
+- macOS 浮层出现时会播放短暂轻粒子点阵重构动画，退出时粒子向四周散开，阅读阶段保持安静。
 - 内置提醒：
   - 放松眼睛 / 起身活动：30 分钟
   - 喝水：60 分钟
@@ -60,7 +60,10 @@ cp config.example.env ~/.config/HealthReminder/config.env
 - `KANBAN_INBOX_SECTION`：候选任务来源 section，默认 `收件箱`。
 - `OVERLAY_THEME`：浮层视觉主题，默认 `dark_neon`。
 - `OVERLAY_TEXT_ALIGNMENT`：浮层文字对齐，默认 `center`。
+- `OVERLAY_POSITION`：浮层位置，默认 `upper_center`。
+- `OVERLAY_VERTICAL_OFFSET_RATIO`：浮层相对屏幕中心向上的偏移比例，默认 `0.18`。
 - `OVERLAY_PARTICLE_STYLE`：浮层粒子效果，支持 `reconstruct`、`light` 或 `off`。
+- `OVERLAY_PARTICLE_COUNT`、`OVERLAY_PARTICLE_CANVAS_PADDING`：粒子数量和卡片外侧粒子画布范围。
 - `OVERLAY_DISPLAY_SECONDS`、`OVERLAY_WIDTH`、`OVERLAY_HEIGHT`：浮层显示时间和尺寸。
 
 ## 开发

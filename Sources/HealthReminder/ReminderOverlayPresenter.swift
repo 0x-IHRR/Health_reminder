@@ -8,9 +8,16 @@ final class ReminderOverlayPresenter {
         let body: String
     }
 
+    private struct OverlayContent {
+        let view: NSView
+        let cardView: NSView
+        let particleLayer: ParticleReconstructionLayer?
+    }
+
     private let configuration: AppConfiguration.Overlay
     private var queue: [OverlayMessage] = []
     private var isShowing = false
+    private var activeContent: OverlayContent?
 
     init(configuration: AppConfiguration.Overlay = .defaults) {
         self.configuration = configuration
@@ -35,34 +42,36 @@ final class ReminderOverlayPresenter {
         panel.alphaValue = 0
         panel.orderFrontRegardless()
 
-        if let contentView = panel.contentView {
-            startParticleGather(in: contentView)
-            contentView.layer?.transform = CATransform3DMakeScale(0.92, 0.92, 1)
+        if let activeContent {
+            activeContent.cardView.alphaValue = 0
+            activeContent.particleLayer?.startGather()
+            activeContent.cardView.layer?.transform = CATransform3DMakeScale(0.94, 0.94, 1)
 
             let scaleAnimation = CABasicAnimation(keyPath: "transform.scale")
-            scaleAnimation.fromValue = 0.92
+            scaleAnimation.fromValue = 0.94
             scaleAnimation.toValue = 1
             scaleAnimation.duration = max(configuration.fadeInSeconds, configuration.particleDurationSeconds)
             scaleAnimation.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            contentView.layer?.add(scaleAnimation, forKey: "scaleIn")
-            contentView.layer?.transform = CATransform3DIdentity
+            activeContent.cardView.layer?.add(scaleAnimation, forKey: "scaleIn")
+            activeContent.cardView.layer?.transform = CATransform3DIdentity
         }
 
         NSAnimationContext.runAnimationGroup { context in
             context.duration = configuration.fadeInSeconds
+            self.activeContent?.cardView.animator().alphaValue = 1
             panel.animator().alphaValue = 1
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + configuration.displaySeconds) {
-            if let contentView = panel.contentView {
-                self.startParticleScatter(in: contentView)
-            }
+            self.activeContent?.particleLayer?.startScatter()
 
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = self.configuration.fadeOutSeconds
+                self.activeContent?.cardView.animator().alphaValue = 0
                 panel.animator().alphaValue = 0
             } completionHandler: {
                 panel.close()
+                self.activeContent = nil
                 self.isShowing = false
                 self.showNextIfNeeded()
             }
@@ -70,8 +79,13 @@ final class ReminderOverlayPresenter {
     }
 
     private func makePanel(for message: OverlayMessage) -> NSPanel {
-        let size = NSSize(width: configuration.width, height: configuration.height)
-        let frame = centeredFrame(size: size)
+        let cardSize = NSSize(width: configuration.width, height: configuration.height)
+        let padding = canvasPadding
+        let canvasSize = NSSize(
+            width: cardSize.width + padding * 2,
+            height: cardSize.height + padding * 2
+        )
+        let frame = overlayFrame(canvasSize: canvasSize, cardSize: cardSize, padding: padding)
         let panel = NSPanel(
             contentRect: frame,
             styleMask: [.borderless, .nonactivatingPanel],
@@ -87,119 +101,38 @@ final class ReminderOverlayPresenter {
         panel.isOpaque = false
         panel.isReleasedWhenClosed = false
         panel.level = .floating
-        panel.contentView = makeContentView(for: message, size: size)
+        let content = makeContentView(for: message, cardSize: cardSize, padding: padding)
+        activeContent = content
+        panel.contentView = content.view
 
         return panel
-    }
-
-    private func startParticleGather(in contentView: NSView) {
-        guard shouldShowParticles, let layer = contentView.layer else {
-            return
-        }
-
-        let emitter = makeParticleEmitter(in: contentView, mode: .gather)
-        layer.addSublayer(emitter)
-
-        let sizeAnimation = CABasicAnimation(keyPath: "emitterSize")
-        sizeAnimation.fromValue = emitter.emitterSize
-        sizeAnimation.toValue = CGSize(width: 24, height: 24)
-        sizeAnimation.duration = configuration.particleDurationSeconds
-        sizeAnimation.timingFunction = CAMediaTimingFunction(name: .easeOut)
-        emitter.add(sizeAnimation, forKey: "particleGather")
-        emitter.emitterSize = CGSize(width: 24, height: 24)
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + configuration.particleDurationSeconds) {
-            emitter.birthRate = 0
-        }
-    }
-
-    private func startParticleScatter(in contentView: NSView) {
-        guard shouldShowParticles, let layer = contentView.layer else {
-            return
-        }
-
-        let emitter = makeParticleEmitter(in: contentView, mode: .scatter)
-        layer.addSublayer(emitter)
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + min(0.35, configuration.particleDurationSeconds)) {
-            emitter.birthRate = 0
-        }
-    }
-
-    private enum ParticleMode {
-        case gather
-        case scatter
     }
 
     private var shouldShowParticles: Bool {
         configuration.particleStyle != "off"
     }
 
-    private func makeParticleEmitter(in contentView: NSView, mode: ParticleMode) -> CAEmitterLayer {
-        let emitter = CAEmitterLayer()
-        emitter.emitterShape = .circle
-        emitter.emitterMode = .outline
-        emitter.emitterPosition = CGPoint(x: contentView.bounds.midX, y: contentView.bounds.midY)
-        emitter.emitterSize = mode == .gather
-            ? CGSize(width: contentView.bounds.width * 0.86, height: contentView.bounds.height * 0.9)
-            : CGSize(width: 32, height: 32)
-        emitter.beginTime = CACurrentMediaTime()
-        emitter.birthRate = 1
-        emitter.zPosition = 8
-
-        let cell = CAEmitterCell()
-        cell.birthRate = Float(configuration.particleBirthRate)
-        cell.lifetime = Float(configuration.particleLifetimeSeconds)
-        cell.lifetimeRange = Float(configuration.particleLifetimeSeconds * 0.25)
-        cell.velocity = CGFloat(mode == .gather ? configuration.particleVelocity * 0.75 : configuration.particleVelocity * 1.15)
-        cell.velocityRange = CGFloat(configuration.particleVelocity * 0.5)
-        cell.emissionRange = .pi * 2
-        cell.scale = CGFloat(configuration.particleScale)
-        cell.scaleRange = CGFloat(configuration.particleScale * 0.65)
-        cell.alphaSpeed = -0.85
-        cell.contents = particleImage().cgImage(forProposedRect: nil, context: nil, hints: nil)
-        cell.color = particleColor(for: mode).cgColor
-
-        emitter.emitterCells = [cell]
-        return emitter
+    private var canvasPadding: CGFloat {
+        shouldShowParticles ? CGFloat(configuration.particleCanvasPadding) : 0
     }
 
-    private func particleColor(for mode: ParticleMode) -> NSColor {
-        switch mode {
-        case .gather:
-            return NSColor(calibratedRed: 0.54, green: 0.82, blue: 1.0, alpha: 0.74)
-        case .scatter:
-            return NSColor(calibratedRed: 0.77, green: 0.46, blue: 1.0, alpha: 0.58)
-        }
-    }
-
-    private func particleImage() -> NSImage {
-        let size = NSSize(width: 14, height: 14)
-        let image = NSImage(size: size)
-
-        image.lockFocus()
-        defer {
-            image.unlockFocus()
-        }
-
-        let bounds = NSRect(origin: .zero, size: size)
-        let gradient = NSGradient(colors: [
-            NSColor.white.withAlphaComponent(0.95),
-            NSColor(calibratedRed: 0.58, green: 0.95, blue: 0.86, alpha: 0.35),
-            .clear
-        ])
-        gradient?.draw(in: NSBezierPath(ovalIn: bounds), angle: 0)
-
-        return image
-    }
-
-    private func makeContentView(for message: OverlayMessage, size: NSSize) -> NSView {
-        let container = NSView(frame: NSRect(origin: .zero, size: size))
+    private func makeContentView(
+        for message: OverlayMessage,
+        cardSize: NSSize,
+        padding: CGFloat
+    ) -> OverlayContent {
+        let canvasSize = NSSize(width: cardSize.width + padding * 2, height: cardSize.height + padding * 2)
+        let container = NSView(frame: NSRect(origin: .zero, size: canvasSize))
         container.wantsLayer = true
         container.layer?.backgroundColor = NSColor.clear.cgColor
         container.layer?.masksToBounds = false
 
-        addBackgroundLayers(to: container, size: size)
+        let cardFrame = NSRect(x: padding, y: padding, width: cardSize.width, height: cardSize.height)
+        let cardView = NSView(frame: cardFrame)
+        cardView.wantsLayer = true
+        cardView.layer?.backgroundColor = NSColor.clear.cgColor
+        cardView.layer?.masksToBounds = false
+        addBackgroundLayers(to: cardView, size: cardSize)
 
         let titleLabel = NSTextField(labelWithString: message.title)
         titleLabel.alignment = .center
@@ -223,17 +156,36 @@ final class ReminderOverlayPresenter {
         stackView.wantsLayer = true
         stackView.layer?.zPosition = 20
 
-        container.addSubview(stackView)
+        cardView.addSubview(stackView)
+        container.addSubview(cardView)
+
+        let particleLayer: ParticleReconstructionLayer?
+        if shouldShowParticles, let containerLayer = container.layer {
+            let layer = ParticleReconstructionLayer(
+                frame: NSRect(origin: .zero, size: canvasSize),
+                cardFrame: cardFrame,
+                particleCount: configuration.particleCount,
+                particleScale: CGFloat(configuration.particleScale),
+                gatherDuration: configuration.particleDurationSeconds,
+                scatterDuration: max(configuration.fadeOutSeconds, configuration.particleDurationSeconds * 0.72),
+                velocity: CGFloat(configuration.particleVelocity)
+            )
+            layer.zPosition = 30
+            containerLayer.addSublayer(layer)
+            particleLayer = layer
+        } else {
+            particleLayer = nil
+        }
 
         NSLayoutConstraint.activate([
-            stackView.centerXAnchor.constraint(equalTo: container.centerXAnchor),
-            stackView.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            stackView.widthAnchor.constraint(equalTo: container.widthAnchor, constant: -56),
+            stackView.centerXAnchor.constraint(equalTo: cardView.centerXAnchor),
+            stackView.centerYAnchor.constraint(equalTo: cardView.centerYAnchor),
+            stackView.widthAnchor.constraint(equalTo: cardView.widthAnchor, constant: -56),
             titleLabel.widthAnchor.constraint(equalTo: stackView.widthAnchor),
             bodyLabel.widthAnchor.constraint(equalTo: stackView.widthAnchor)
         ])
 
-        return container
+        return OverlayContent(view: container, cardView: cardView, particleLayer: particleLayer)
     }
 
     private func addBackgroundLayers(to container: NSView, size: NSSize) {
@@ -299,17 +251,275 @@ final class ReminderOverlayPresenter {
         layer.addSublayer(edgeLayer)
     }
 
-    private func centeredFrame(size: NSSize) -> NSRect {
+    private func overlayFrame(canvasSize: NSSize, cardSize: NSSize, padding: CGFloat) -> NSRect {
         let screenFrame = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+        let desiredCardCenterY: CGFloat
+
+        switch configuration.position {
+        case "center":
+            desiredCardCenterY = screenFrame.midY
+        default:
+            desiredCardCenterY = screenFrame.midY + screenFrame.height * CGFloat(configuration.verticalOffsetRatio)
+        }
+
+        let safeMargin: CGFloat = 24
+        let desiredOriginY = desiredCardCenterY - cardSize.height / 2 - padding
+        let minY = screenFrame.minY + safeMargin
+        let maxY = screenFrame.maxY - canvasSize.height - safeMargin
+        let originY = min(max(desiredOriginY, minY), maxY)
+
         return NSRect(
-            x: screenFrame.midX - size.width / 2,
-            y: screenFrame.midY - size.height / 2,
-            width: size.width,
-            height: size.height
+            x: screenFrame.midX - canvasSize.width / 2,
+            y: originY,
+            width: canvasSize.width,
+            height: canvasSize.height
         )
     }
 }
 
 private extension AppConfiguration.Overlay {
     static let defaults = AppConfiguration.defaults.overlay
+}
+
+private final class ParticleReconstructionLayer: CALayer {
+    private struct Particle {
+        let layer: CALayer
+        let startPosition: CGPoint
+        let targetPosition: CGPoint
+        let endPosition: CGPoint
+    }
+
+    private let particles: [Particle]
+    private let gatherDuration: TimeInterval
+    private let scatterDuration: TimeInterval
+
+    init(
+        frame: NSRect,
+        cardFrame: NSRect,
+        particleCount: Int,
+        particleScale: CGFloat,
+        gatherDuration: TimeInterval,
+        scatterDuration: TimeInterval,
+        velocity: CGFloat
+    ) {
+        self.gatherDuration = gatherDuration
+        self.scatterDuration = scatterDuration
+        self.particles = ParticleReconstructionLayer.makeParticles(
+            frame: frame,
+            cardFrame: cardFrame,
+            count: particleCount,
+            particleScale: particleScale,
+            velocity: velocity
+        )
+        super.init()
+        self.frame = frame
+        masksToBounds = false
+
+        for particle in particles {
+            particle.layer.position = particle.startPosition
+            particle.layer.opacity = 0
+            addSublayer(particle.layer)
+        }
+    }
+
+    required init?(coder: NSCoder) {
+        return nil
+    }
+
+    func startGather() {
+        for (index, particle) in particles.enumerated() {
+            let delay = Double(index % 24) * 0.006
+            animate(
+                particle: particle,
+                from: particle.startPosition,
+                to: particle.targetPosition,
+                duration: gatherDuration,
+                delay: delay,
+                startingOpacity: 0,
+                endingOpacity: 0.92,
+                key: "particleGather"
+            )
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + gatherDuration + 0.15) {
+            self.particles.forEach { $0.layer.opacity = 0 }
+        }
+    }
+
+    func startScatter() {
+        particles.forEach { particle in
+            particle.layer.removeAllAnimations()
+            particle.layer.position = particle.targetPosition
+            particle.layer.opacity = 0.82
+        }
+
+        for (index, particle) in particles.enumerated() {
+            let delay = Double(index % 18) * 0.004
+            animate(
+                particle: particle,
+                from: particle.targetPosition,
+                to: particle.endPosition,
+                duration: scatterDuration,
+                delay: delay,
+                startingOpacity: 0.82,
+                endingOpacity: 0,
+                key: "particleScatter"
+            )
+        }
+    }
+
+    private func animate(
+        particle: Particle,
+        from startPosition: CGPoint,
+        to endPosition: CGPoint,
+        duration: TimeInterval,
+        delay: TimeInterval,
+        startingOpacity: Float,
+        endingOpacity: Float,
+        key: String
+    ) {
+        let beginTime = CACurrentMediaTime() + delay
+
+        let positionAnimation = CABasicAnimation(keyPath: "position")
+        positionAnimation.fromValue = startPosition
+        positionAnimation.toValue = endPosition
+        positionAnimation.duration = duration
+        positionAnimation.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        positionAnimation.fillMode = .forwards
+        positionAnimation.isRemovedOnCompletion = false
+
+        let opacityAnimation = CAKeyframeAnimation(keyPath: "opacity")
+        opacityAnimation.values = [startingOpacity, 0.95, endingOpacity]
+        opacityAnimation.keyTimes = [0, 0.45, 1]
+        opacityAnimation.duration = duration
+        opacityAnimation.fillMode = .forwards
+        opacityAnimation.isRemovedOnCompletion = false
+
+        let group = CAAnimationGroup()
+        group.animations = [positionAnimation, opacityAnimation]
+        group.beginTime = beginTime
+        group.duration = duration
+        group.fillMode = .forwards
+        group.isRemovedOnCompletion = false
+
+        particle.layer.add(group, forKey: key)
+    }
+
+    private static func makeParticles(
+        frame: NSRect,
+        cardFrame: NSRect,
+        count: Int,
+        particleScale: CGFloat,
+        velocity: CGFloat
+    ) -> [Particle] {
+        let safeScale = max(0.012, particleScale)
+        let particleSize = max(2.4, min(7.0, safeScale * 140))
+        let colors = [
+            NSColor(calibratedRed: 0.55, green: 0.82, blue: 1.0, alpha: 0.9),
+            NSColor(calibratedRed: 0.68, green: 0.46, blue: 1.0, alpha: 0.78),
+            NSColor(calibratedRed: 1.0, green: 0.75, blue: 0.35, alpha: 0.62),
+            NSColor.white.withAlphaComponent(0.78)
+        ]
+
+        return (0..<count).map { index in
+            let target = targetPoint(index: index, count: count, cardFrame: cardFrame)
+            let start = outsidePoint(
+                index: index,
+                frame: frame,
+                cardFrame: cardFrame
+            )
+            let end = outsidePoint(
+                index: index + count / 3,
+                frame: frame,
+                cardFrame: cardFrame
+            )
+            let particleLayer = CALayer()
+            particleLayer.bounds = CGRect(x: 0, y: 0, width: particleSize, height: particleSize)
+            particleLayer.cornerRadius = particleSize / 2
+            particleLayer.backgroundColor = colors[index % colors.count].cgColor
+            particleLayer.shadowColor = colors[index % colors.count].cgColor
+            particleLayer.shadowOpacity = 0.74
+            particleLayer.shadowRadius = particleSize * 1.7
+            particleLayer.shadowOffset = .zero
+
+            return Particle(
+                layer: particleLayer,
+                startPosition: start,
+                targetPosition: target,
+                endPosition: end
+            )
+        }
+    }
+
+    private static func targetPoint(index: Int, count: Int, cardFrame: NSRect) -> CGPoint {
+        let borderCount = Int(Double(count) * 0.62)
+
+        if index < borderCount {
+            let progress = CGFloat(index) / CGFloat(max(1, borderCount))
+            return roundedRectPerimeterPoint(progress: progress, rect: cardFrame.insetBy(dx: 8, dy: 8))
+        }
+
+        let innerIndex = index - borderCount
+        let innerCount = max(1, count - borderCount)
+        let progress = CGFloat(innerIndex) / CGFloat(innerCount)
+        let row = innerIndex % 3
+        let x = cardFrame.minX + cardFrame.width * (0.22 + 0.56 * progress)
+        let y = cardFrame.midY + CGFloat(row - 1) * 18
+
+        return CGPoint(x: x, y: y)
+    }
+
+    private static func roundedRectPerimeterPoint(progress: CGFloat, rect: NSRect) -> CGPoint {
+        let clampedProgress = progress.truncatingRemainder(dividingBy: 1)
+
+        switch clampedProgress {
+        case 0..<0.25:
+            let local = clampedProgress / 0.25
+            return CGPoint(x: rect.minX + rect.width * local, y: rect.maxY)
+        case 0.25..<0.5:
+            let local = (clampedProgress - 0.25) / 0.25
+            return CGPoint(x: rect.maxX, y: rect.maxY - rect.height * local)
+        case 0.5..<0.75:
+            let local = (clampedProgress - 0.5) / 0.25
+            return CGPoint(x: rect.maxX - rect.width * local, y: rect.minY)
+        default:
+            let local = (clampedProgress - 0.75) / 0.25
+            return CGPoint(x: rect.minX, y: rect.minY + rect.height * local)
+        }
+    }
+
+    private static func outsidePoint(
+        index: Int,
+        frame: NSRect,
+        cardFrame: NSRect
+    ) -> CGPoint {
+        let side = index % 4
+        let seed = CGFloat((index * 37) % 100) / 100
+        let wobble = CGFloat(((index * 53) % 100) - 50) / 50
+        let edgeInset: CGFloat = 10
+        let innerGap: CGFloat = 28
+
+        switch side {
+        case 0:
+            return CGPoint(
+                x: frame.minX + edgeInset + max(0, cardFrame.minX - innerGap - edgeInset) * seed,
+                y: frame.minY + frame.height * seed + wobble * 18
+            )
+        case 1:
+            return CGPoint(
+                x: cardFrame.maxX + innerGap + max(0, frame.maxX - cardFrame.maxX - innerGap - edgeInset) * seed,
+                y: frame.minY + frame.height * seed + wobble * 18
+            )
+        case 2:
+            return CGPoint(
+                x: frame.minX + frame.width * seed + wobble * 18,
+                y: cardFrame.maxY + innerGap + max(0, frame.maxY - cardFrame.maxY - innerGap - edgeInset) * seed
+            )
+        default:
+            return CGPoint(
+                x: frame.minX + frame.width * seed + wobble * 18,
+                y: frame.minY + edgeInset + max(0, cardFrame.minY - innerGap - edgeInset) * seed
+            )
+        }
+    }
 }
