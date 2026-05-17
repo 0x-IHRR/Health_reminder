@@ -7,6 +7,8 @@ public struct AppConfiguration: Equatable {
         public let fadeOutSeconds: TimeInterval
         public let width: Double
         public let height: Double
+        public let theme: String
+        public let textAlignment: String
         public let particleStyle: String
         public let particleBirthRate: Double
         public let particleLifetimeSeconds: TimeInterval
@@ -20,6 +22,8 @@ public struct AppConfiguration: Equatable {
             fadeOutSeconds: TimeInterval,
             width: Double,
             height: Double,
+            theme: String,
+            textAlignment: String,
             particleStyle: String,
             particleBirthRate: Double,
             particleLifetimeSeconds: TimeInterval,
@@ -32,6 +36,8 @@ public struct AppConfiguration: Equatable {
             self.fadeOutSeconds = fadeOutSeconds
             self.width = width
             self.height = height
+            self.theme = theme
+            self.textAlignment = textAlignment
             self.particleStyle = particleStyle
             self.particleBirthRate = particleBirthRate
             self.particleLifetimeSeconds = particleLifetimeSeconds
@@ -90,12 +96,14 @@ public struct AppConfiguration: Equatable {
             fadeOutSeconds: 0.5,
             width: 420,
             height: 132,
-            particleStyle: "light",
-            particleBirthRate: 48,
+            theme: "dark_neon",
+            textAlignment: "center",
+            particleStyle: "reconstruct",
+            particleBirthRate: 72,
             particleLifetimeSeconds: 1.1,
-            particleDurationSeconds: 0.9,
-            particleVelocity: 42,
-            particleScale: 0.035
+            particleDurationSeconds: 0.85,
+            particleVelocity: 52,
+            particleScale: 0.03
         )
     )
 
@@ -160,6 +168,11 @@ public struct AppConfiguration: Equatable {
                 ),
                 width: positiveDouble(overrides["OVERLAY_WIDTH"], defaultValue: overlayDefaults.width),
                 height: positiveDouble(overrides["OVERLAY_HEIGHT"], defaultValue: overlayDefaults.height),
+                theme: overlayTheme(overrides["OVERLAY_THEME"], defaultValue: overlayDefaults.theme),
+                textAlignment: textAlignment(
+                    overrides["OVERLAY_TEXT_ALIGNMENT"],
+                    defaultValue: overlayDefaults.textAlignment
+                ),
                 particleStyle: particleStyle(
                     overrides["OVERLAY_PARTICLE_STYLE"],
                     defaultValue: overlayDefaults.particleStyle
@@ -246,6 +259,16 @@ public struct AppConfiguration: Equatable {
 
     private static func particleStyle(_ value: String?, defaultValue: String) -> String {
         let normalizedValue = nonEmptyString(value, defaultValue: defaultValue).lowercased()
-        return ["light", "off"].contains(normalizedValue) ? normalizedValue : defaultValue
+        return ["reconstruct", "light", "off"].contains(normalizedValue) ? normalizedValue : defaultValue
+    }
+
+    private static func overlayTheme(_ value: String?, defaultValue: String) -> String {
+        let normalizedValue = nonEmptyString(value, defaultValue: defaultValue).lowercased()
+        return ["dark_neon"].contains(normalizedValue) ? normalizedValue : defaultValue
+    }
+
+    private static func textAlignment(_ value: String?, defaultValue: String) -> String {
+        let normalizedValue = nonEmptyString(value, defaultValue: defaultValue).lowercased()
+        return ["center"].contains(normalizedValue) ? normalizedValue : defaultValue
     }
 }

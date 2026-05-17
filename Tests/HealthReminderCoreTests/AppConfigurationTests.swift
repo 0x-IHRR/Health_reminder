@@ -25,7 +25,9 @@ final class AppConfigurationTests: XCTestCase {
             OVERLAY_FADE_OUT_SECONDS=0.4
             OVERLAY_WIDTH=500
             OVERLAY_HEIGHT=150
-            OVERLAY_PARTICLE_STYLE=off
+            OVERLAY_THEME=dark_neon
+            OVERLAY_TEXT_ALIGNMENT=center
+            OVERLAY_PARTICLE_STYLE=reconstruct
             OVERLAY_PARTICLE_BIRTH_RATE=12
             OVERLAY_PARTICLE_LIFETIME_SECONDS=0.7
             OVERLAY_PARTICLE_DURATION_SECONDS=0.5
@@ -47,7 +49,9 @@ final class AppConfigurationTests: XCTestCase {
         XCTAssertEqual(configuration.overlay.fadeOutSeconds, 0.4)
         XCTAssertEqual(configuration.overlay.width, 500)
         XCTAssertEqual(configuration.overlay.height, 150)
-        XCTAssertEqual(configuration.overlay.particleStyle, "off")
+        XCTAssertEqual(configuration.overlay.theme, "dark_neon")
+        XCTAssertEqual(configuration.overlay.textAlignment, "center")
+        XCTAssertEqual(configuration.overlay.particleStyle, "reconstruct")
         XCTAssertEqual(configuration.overlay.particleBirthRate, 12)
         XCTAssertEqual(configuration.overlay.particleLifetimeSeconds, 0.7)
         XCTAssertEqual(configuration.overlay.particleDurationSeconds, 0.5)
@@ -65,6 +69,8 @@ final class AppConfigurationTests: XCTestCase {
             KANBAN_INBOX_SECTION=
             OVERLAY_WIDTH=-20
             OVERLAY_FADE_IN_SECONDS=-0.2
+            OVERLAY_THEME=white
+            OVERLAY_TEXT_ALIGNMENT=left
             OVERLAY_PARTICLE_STYLE=heavy
             OVERLAY_PARTICLE_BIRTH_RATE=-3
             OVERLAY_PARTICLE_SCALE=0
@@ -78,6 +84,8 @@ final class AppConfigurationTests: XCTestCase {
         XCTAssertEqual(configuration.kanbanInboxSection, AppConfiguration.defaults.kanbanInboxSection)
         XCTAssertEqual(configuration.overlay.width, AppConfiguration.defaults.overlay.width)
         XCTAssertEqual(configuration.overlay.fadeInSeconds, AppConfiguration.defaults.overlay.fadeInSeconds)
+        XCTAssertEqual(configuration.overlay.theme, AppConfiguration.defaults.overlay.theme)
+        XCTAssertEqual(configuration.overlay.textAlignment, AppConfiguration.defaults.overlay.textAlignment)
         XCTAssertEqual(configuration.overlay.particleStyle, AppConfiguration.defaults.overlay.particleStyle)
         XCTAssertEqual(configuration.overlay.particleBirthRate, AppConfiguration.defaults.overlay.particleBirthRate)
         XCTAssertEqual(configuration.overlay.particleScale, AppConfiguration.defaults.overlay.particleScale)
