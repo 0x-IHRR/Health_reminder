@@ -62,8 +62,8 @@ cp config.example.env ~/.config/HealthReminder/config.env
 - `OVERLAY_TEXT_ALIGNMENT`：浮层文字对齐，默认 `center`。
 - `OVERLAY_POSITION`：浮层位置，默认 `upper_center`。
 - `OVERLAY_VERTICAL_OFFSET_RATIO`：浮层相对屏幕中心向上的偏移比例，默认 `0.18`。
-- `OVERLAY_PARTICLE_STYLE`：浮层粒子效果，支持 `reconstruct`、`light` 或 `off`。
-- `OVERLAY_PARTICLE_COUNT`、`OVERLAY_PARTICLE_CANVAS_PADDING`：粒子数量和卡片外侧粒子画布范围，默认适合暗色虚空凝聚效果。
+- `OVERLAY_PARTICLE_STYLE`：浮层粒子效果，支持 `reconstruct`、`light` 或 `off`，macOS 版由 Vortex 粒子系统渲染。
+- `OVERLAY_PARTICLE_COUNT`、`OVERLAY_PARTICLE_CANVAS_PADDING`：粒子数量和卡片外侧粒子画布范围。
 - `OVERLAY_DISPLAY_SECONDS`、`OVERLAY_WIDTH`、`OVERLAY_HEIGHT`：浮层显示时间和尺寸。
 
 ## 开发
@@ -74,6 +74,8 @@ swift test
 ```
 
 打包产物位于 `build/HealthReminder.app`。
+
+macOS 浮层使用 vendored `Vendor/Vortex` 粒子库。上游 Vortex 为 MIT 许可；本仓库保留其 `LICENSE`，并仅在本地 package manifest 中补充资源声明，以保证命令行 SwiftPM 构建和打包稳定。
 
 Windows 测试和打包在 Windows 环境运行：
 

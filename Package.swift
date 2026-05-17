@@ -7,6 +7,9 @@ let package = Package(
     platforms: [
         .macOS(.v14)
     ],
+    dependencies: [
+        .package(path: "Vendor/Vortex")
+    ],
     targets: [
         .target(
             name: "HealthReminderCore",
@@ -14,7 +17,10 @@ let package = Package(
         ),
         .executableTarget(
             name: "HealthReminder",
-            dependencies: ["HealthReminderCore"],
+            dependencies: [
+                "HealthReminderCore",
+                .product(name: "Vortex", package: "Vortex")
+            ],
             path: "Sources/HealthReminder"
         ),
         .testTarget(
