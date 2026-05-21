@@ -1,0 +1,206 @@
+[a] Skip to content
+[h2] Navigation Menu
+[a] Sign in
+[button] Platform
+[button] Solutions
+[button] Resources
+[button] Open Source
+[button] Enterprise
+[span] Search or jump to...
+[h1] Search code, repositories, users, issues, pull requests...
+[label] Search
+[span] Clear
+[a] Search syntax tips
+[h1] Provide feedback
+[p] We read every piece of feedback, and take your input very seriously.
+[label] Include my email address so I can be contacted
+[button] Cancel
+[button] Submit feedback
+[h1] Saved searches
+[h2] Use saved searches to filter your results more quickly
+[label] Name
+[label] Query
+[p] To see all available qualifiers, see our
+[a] documentation
+[button] Cancel
+[button] Create saved search
+[a] Sign in
+[a] Sign up
+[a] Reload
+[a] Reload
+[a] Reload
+[a] 0x-IHRR
+[a] Health_reminder
+[span] Public
+[a] Notifications
+[a] Fork
+[span] Star
+[span] Pull requests
+[span] Projects
+[span] Security and quality
+[span] Insights
+[h1] 0x-IHRR/Health_reminder
+[span] main
+[span] Branch
+[span] Tags
+[span] Go to file
+[span] Code
+[h2] Folders and files
+[span] Name
+[span] Name
+[span] Last commit message
+[span] Last commit date
+[h2] Latest commit
+[a] 0x-IHRR
+[a] Add Windows tray app and release workflow
+[relative-time] May 8, 2026
+[a] 98364af
+[relative-time] May 8, 2026
+[h2] History
+[span] 5 Commits
+[span] .github/
+[span] workflows
+[span] .github/
+[span] workflows
+[a] Add Windows tray app and release workflow
+[relative-time] May 8, 2026
+[a] Scripts
+[a] Scripts
+[a] Add Windows tray app and release workflow
+[relative-time] May 8, 2026
+[a] Sources
+[a] Sources
+[a] Reduce reminder interruptions
+[relative-time] May 7, 2026
+[span] Tests/
+[span] HealthReminderCoreTests
+[span] Tests/
+[span] HealthReminderCoreTests
+[a] Reduce reminder interruptions
+[relative-time] May 7, 2026
+[a] Windows
+[a] Windows
+[a] Add Windows tray app and release workflow
+[relative-time] May 8, 2026
+[a] .gitignore
+[a] .gitignore
+[a] Add Windows tray app and release workflow
+[relative-time] May 8, 2026
+[a] AGENTS.md
+[a] AGENTS.md
+[a] Reduce reminder interruptions
+[relative-time] May 7, 2026
+[a] Package.swift
+[a] Package.swift
+[a] Initial health reminder app
+[relative-time] May 6, 2026
+[a] README.md
+[a] README.md
+[a] Add Windows tray app and release workflow
+[relative-time] May 8, 2026
+[a] VERSION
+[a] VERSION
+[a] Add Windows tray app and release workflow
+[relative-time] May 8, 2026
+[button] View all files
+[h2] Repository files navigation
+[h1] HealthReminder
+[p] 一个极简健康提醒应用：按正在操作电脑的累计时间，轻量提醒护眼活动、喝水和坐姿肩颈放松。提醒发出后会自动进入下一轮计时。
+[p] 目前支持：
+[li] macOS 菜单栏版本
+[li] Windows 系统托盘版本
+[h3] macOS
+[p] 下载 GitHub Releases 中的最新 DMG，打开后把
+[code] HealthReminder.app
+[code] /Applications
+[p] ，再启动应用。
+[p] 如果是从源码本地打包：
+[pre] bash Scripts/package_app.sh
+open build/HealthReminder.app
+[p] 第一次运行时，macOS 会请求通知权限。允许后，提醒会以系统通知形式出现。
+[h3] Windows
+[p] 下载 GitHub Releases 中的
+[code] HealthReminder-<version>-win-x64.zip
+[p] ，解压后运行
+[code] HealthReminder.exe
+[p] Windows 版是自包含包，不需要额外安装 .NET。第一次运行后会默认开启当前用户的开机自启，可在托盘菜单里关闭。
+[li] macOS 版常驻菜单栏，Windows 版常驻系统托盘，不显示主窗口。
+[li] 所有提醒都按键盘或鼠标活跃使用时间累计。
+[li] 离开电脑超过 60 秒时暂停累计。
+[li] 内置提醒：
+[li] 放松眼睛 / 起身活动：30 分钟
+[li] 喝水：60 分钟
+[li] 调整坐姿 / 放松肩颈：90 分钟
+[li] 提醒发出后自动进入下一轮，不需要手动确认。
+[li] 多个提醒独立计时，其中一个提醒触发不会重置其他提醒。
+[code] .app
+[li] 启动时，会写入用户的
+[code] LaunchAgents
+[li] ，下次登录后自动启动。
+[li] Windows 版会写入当前用户的
+[code] Run
+[li] 启动项，下次登录后自动启动。
+[pre] swift build
+swift
+[span] test
+[p] 打包产物位于
+[code] build/HealthReminder.app
+[p] Windows 测试和打包在 Windows 环境运行：
+[pre] dotnet test Windows
+[pre] HealthReminder.Windows.Tests
+[pre] HealthReminder.Windows.Tests.csproj
+[pre] configuration Release
+.
+[pre] Scripts
+[pre] package_windows.ps1
+[pre] bash Scripts/package_app.sh
+mkdir -p release
+VERSION=
+[span] cat VERSION
+[pre] hdiutil create -volname HealthReminder -srcfolder build/HealthReminder.app -ov -format UDZO
+[span] release/HealthReminder-
+[span] ${VERSION}
+[span] .dmg
+[p] 发布新版本时，更新
+[code] VERSION
+[p] ，创建同版本 Git tag。推送
+[code] v<version>
+[p] tag 后，GitHub Actions 会生成 macOS DMG 和 Windows x64 ZIP，并创建 GitHub Release。
+[h2] About
+[p] 一款 MacOS 自用的健康提醒工具，眼睛要坏了
+[h3] Resources
+[a] Readme
+[h3] Uh oh!
+[p] There was an error while loading.
+[a] Please reload this page
+[span] Activity
+[h3] Stars
+[a] stars
+[h3] Watchers
+[a] watching
+[h3] Forks
+[a] forks
+[a] Report repository
+[a] Releases
+[span] HealthReminder v0.4.0
+[span] Latest
+[relative-time] May 8, 2026
+[a] + 3 releases
+[a] Packages
+[div] No packages published
+[a] Contributors
+[strong] 0x-IHRR
+[span] .小白
+[h2] Languages
+[span] 48.0%
+[span] Swift
+[span] 45.2%
+[span] Shell
+[span] 4.2%
+[span] PowerShell
+[span] 2.6%
+[span] © 2026 GitHub, Inc.
+[h3] Footer navigation
+[a] Security
+[a] Community
+[button] Do not share my personal information

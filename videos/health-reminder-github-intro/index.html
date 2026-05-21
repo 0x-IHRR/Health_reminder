@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HealthReminder GitHub Intro</title>
+  <style>
+    :root {
+      --canvas: #0D1117;
+      --deep: #010409;
+      --panel: #151B23;
+      --border: #3D444D;
+      --text: #F0F6FC;
+      --muted: #9198A1;
+      --blue: #4493F8;
+      --green: #238636;
+      --coral: #FF7B72;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--deep);
+      font-family: "Mona Sans VF", "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+    }
+
+    #health-reminder-github-intro {
+      position: relative;
+      overflow: hidden;
+      width: 1920px;
+      height: 1080px;
+      background: var(--canvas);
+    }
+
+    .scene {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 84px 108px;
+      opacity: 0;
+      background: var(--canvas);
+    }
+
+    #scene-1 {
+      opacity: 1;
+    }
+
+    .scene-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(460px, 0.88fr);
+      gap: 56px;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+    }
+
+    .eyebrow {
+      color: var(--blue);
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 22px;
+    }
+
+    .headline {
+      max-width: 860px;
+      margin: 0;
+      color: var(--text);
+      font-size: 86px;
+      font-weight: 800;
+      line-height: 1.04;
+    }
+
+    .subhead {
+      max-width: 840px;
+      margin: 28px 0 0;
+      color: var(--muted);
+      font-size: 31px;
+      font-weight: 500;
+      line-height: 1.46;
+    }
+
+    .repo-frame {
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--deep);
+      box-shadow: 0 36px 100px rgba(1, 4, 9, 0.48);
+    }
+
+    .repo-frame img {
+      display: block;
+      width: 100%;
+      height: auto;
+      transform-origin: top center;
+    }
+
+    .repo-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 70px;
+      padding: 0 26px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 22px;
+      font-weight: 650;
+    }
+
+    .repo-name {
+      color: var(--blue);
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 34px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 54px;
+      padding: 0 22px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: #212830;
+      color: var(--text);
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #151B23;
+      box-shadow: 0 24px 70px rgba(1, 4, 9, 0.28);
+    }
+
+    .readme-panel {
+      width: 100%;
+      padding: 38px;
+    }
+
+    .readme-title {
+      margin: 0 0 22px;
+      font-size: 44px;
+      line-height: 1.1;
+      font-weight: 800;
+    }
+
+    .readme-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 25px;
+      line-height: 1.55;
+      font-weight: 560;
+    }
+
+    .timer-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+      margin-top: 42px;
+    }
+
+    .timer-card {
+      min-height: 245px;
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #151B23;
+    }
+
+    .timer-number {
+      color: var(--green);
+      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: 82px;
+      font-weight: 800;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .timer-label {
+      margin-top: 18px;
+      color: var(--text);
+      font-size: 27px;
+      font-weight: 800;
+    }
+
+    .timer-note {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 22px;
+      line-height: 1.35;
+    }
+
+    .install-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px;
+      width: 100%;
+      margin-top: 42px;
+    }
+
+    .install-card {
+      min-height: 360px;
+      padding: 34px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #151B23;
+    }
+
+    .install-card h3 {
+      margin: 0 0 22px;
+      font-size: 42px;
+      line-height: 1.1;
+    }
+
+    .install-card p {
+      margin: 0 0 20px;
+      color: var(--muted);
+      font-size: 24px;
+      line-height: 1.48;
+      font-weight: 560;
+    }
+
+    .code {
+      display: block;
+      margin-top: 18px;
+      padding: 22px 24px;
+      border-radius: 10px;
+      background: #0D1117;
+      color: var(--text);
+      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: 22px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .release-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 38px;
+    }
+
+    .release-step {
+      min-height: 154px;
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #151B23;
+    }
+
+    .release-step strong {
+      display: block;
+      color: var(--blue);
+      font-size: 22px;
+      margin-bottom: 14px;
+    }
+
+    .release-step span {
+      color: var(--text);
+      font-size: 25px;
+      font-weight: 780;
+      line-height: 1.28;
+    }
+
+    .final-url {
+      margin-top: 34px;
+      color: var(--muted);
+      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: 26px;
+    }
+
+    .accent-line {
+      width: 118px;
+      height: 5px;
+      margin: 0 0 28px;
+      border-radius: 999px;
+      background: var(--coral);
+    }
+
+    .language-bar {
+      display: flex;
+      overflow: hidden;
+      height: 18px;
+      margin-top: 28px;
+      border-radius: 999px;
+      background: #212830;
+    }
+
+    .language-bar span:nth-child(1) { width: 48%; background: #178600; }
+    .language-bar span:nth-child(2) { width: 45.2%; background: #F05138; }
+    .language-bar span:nth-child(3) { width: 4.2%; background: #89E051; }
+    .language-bar span:nth-child(4) { width: 2.6%; background: #012456; }
+
+    .meta-list {
+      display: grid;
+      gap: 16px;
+      margin-top: 30px;
+      color: var(--muted);
+      font-size: 24px;
+      line-height: 1.35;
+    }
+
+    .meta-list b {
+      color: var(--text);
+    }
+
+    .caption {
+      position: absolute;
+      left: 108px;
+      bottom: 54px;
+      color: var(--muted);
+      font-size: 20px;
+      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+    }
+  </style>
+</head>
+<body>
+  <div id="health-reminder-github-intro" data-composition-id="health-reminder-github-intro" data-start="0" data-width="1920" data-height="1080" data-duration="40">
+    <audio id="narration" data-start="0" data-duration="40" data-track-index="1" data-volume="1" src="narration.wav"></audio>
+
+    <section id="scene-1" class="scene">
+      <div class="scene-grid">
+        <div>
+          <div class="accent-line"></div>
+          <div class="eyebrow">0x-IHRR / Health_reminder</div>
+          <h1 class="headline">别等到眼睛提醒你</h1>
+          <p class="subhead">一个常驻菜单栏和系统托盘的健康提醒工具，按实际活跃使用时间提醒护眼、喝水和调整坐姿。</p>
+          <div class="pill-row">
+            <span class="pill">macOS 菜单栏</span>
+            <span class="pill">Windows 托盘</span>
+            <span class="pill">v0.4.0 Release</span>
+          </div>
+        </div>
+        <div class="repo-frame" id="repo-shot-1" data-layout-allow-overflow>
+          <div class="repo-bar"><span class="repo-name">0x-IHRR/Health_reminder</span><span>Public</span></div>
+          <img src="capture/screenshots/scroll-000.png" alt="GitHub repository overview">
+        </div>
+      </div>
+      <div class="caption">github.com/0x-IHRR/Health_reminder</div>
+    </section>
+
+    <section id="scene-2" class="scene">
+      <div class="scene-grid">
+        <div class="readme-panel panel">
+          <div class="eyebrow">README 里的核心逻辑</div>
+          <h2 class="headline">只按活跃使用时间累计</h2>
+          <p class="subhead">键盘和鼠标在用，才进入计时。离开电脑超过 60 秒，累计自动暂停。</p>
+          <div class="pill-row">
+            <span class="pill">不显示主窗口</span>
+            <span class="pill">提醒后自动进入下一轮</span>
+            <span class="pill">多个提醒独立计时</span>
+          </div>
+        </div>
+        <div class="panel readme-panel">
+          <h3 class="readme-title">安静，但不缺席</h3>
+          <p class="readme-copy">它不是强提醒，也不是习惯打卡。它只在电脑真的被使用时，轻量提醒你停一下。</p>
+          <div class="language-bar"><span></span><span></span><span></span><span></span></div>
+          <div class="meta-list">
+            <span><b>48.0%</b> C# Windows tray app</span>
+            <span><b>45.2%</b> Swift macOS menu bar app</span>
+            <span><b>GitHub Actions</b> builds release artifacts</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="scene-3" class="scene">
+      <div>
+        <div class="accent-line"></div>
+        <div class="eyebrow">内置提醒</div>
+        <h2 class="headline">三条节奏线，各自独立</h2>
+        <p class="subhead">其中一个提醒触发，不会重置其他提醒。休息、喝水、坐姿各走各的时间。</p>
+        <div class="timer-grid">
+          <div class="timer-card">
+            <div class="timer-number">30</div>
+            <div class="timer-label">分钟</div>
+            <div class="timer-note">放松眼睛 / 起身活动</div>
+          </div>
+          <div class="timer-card">
+            <div class="timer-number">60</div>
+            <div class="timer-label">分钟</div>
+            <div class="timer-note">喝水提醒</div>
+          </div>
+          <div class="timer-card">
+            <div class="timer-number">90</div>
+            <div class="timer-label">分钟</div>
+            <div class="timer-note">调整坐姿 / 放松肩颈</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="scene-4" class="scene">
+      <div>
+        <div class="accent-line"></div>
+        <div class="eyebrow">安装方式</div>
+        <h2 class="headline">下载 Release，或者从源码打包</h2>
+        <div class="install-grid">
+          <div class="install-card">
+            <h3>macOS</h3>
+            <p>下载最新 DMG，把 <b>HealthReminder.app</b> 放进 <b>/Applications</b>，首次启动允许通知权限。</p>
+            <code class="code">bash Scripts/package_app.sh
+open build/HealthReminder.app</code>
+          </div>
+          <div class="install-card">
+            <h3>Windows</h3>
+            <p>下载 <b>HealthReminder-&lt;version&gt;-win-x64.zip</b>，解压后运行 exe。自包含包，不需要额外安装 .NET。</p>
+            <code class="code">HealthReminder.exe
+托盘菜单可关闭开机自启</code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="scene-5" class="scene">
+      <div class="scene-grid">
+        <div>
+          <div class="accent-line"></div>
+          <div class="eyebrow">开发与发布</div>
+          <h2 class="headline">核心逻辑可测试，发布交给 Actions</h2>
+          <code class="code">swift build
+swift test
+
+dotnet test Windows/HealthReminder.Windows.Tests/HealthReminder.Windows.Tests.csproj --configuration Release</code>
+          <div class="release-strip">
+            <div class="release-step"><strong>01</strong><span>更新 VERSION</span></div>
+            <div class="release-step"><strong>02</strong><span>创建同版本 Git tag</span></div>
+            <div class="release-step"><strong>03</strong><span>推送 v&lt;version&gt;</span></div>
+            <div class="release-step"><strong>04</strong><span>生成 DMG 和 Windows ZIP</span></div>
+          </div>
+          <div class="final-url">github.com/0x-IHRR/Health_reminder</div>
+        </div>
+        <div class="repo-frame" id="repo-shot-2" data-layout-allow-overflow>
+          <div class="repo-bar"><span>README / 发布</span><span>GitHub Actions</span></div>
+          <img src="capture/screenshots/scroll-094.png" alt="GitHub repository development and release section">
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+
+    const tl = gsap.timeline({ paused: true });
+    const scenes = ["#scene-1", "#scene-2", "#scene-3", "#scene-4", "#scene-5"];
+
+    function has(selector) {
+      return document.querySelectorAll(selector).length > 0;
+    }
+
+    function fromIf(selector, vars, time) {
+      if (has(selector)) {
+        tl.from(selector, vars, time);
+      }
+    }
+
+    function enterScene(selector, time) {
+      tl.fromTo(selector, { opacity: 0, filter: "blur(18px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.65, ease: "sine.inOut" }, time);
+      fromIf(selector + " .accent-line", { scaleX: 0, transformOrigin: "left center", duration: 0.5, ease: "power2.out" }, time + 0.18);
+      fromIf(selector + " .eyebrow", { y: 24, opacity: 0, duration: 0.52, ease: "power3.out" }, time + 0.25);
+      fromIf(selector + " .headline", { y: 46, opacity: 0, duration: 0.64, ease: "expo.out" }, time + 0.34);
+      fromIf(selector + " .subhead", { y: 30, opacity: 0, duration: 0.58, ease: "power2.out" }, time + 0.52);
+      fromIf(selector + " .pill", { y: 18, opacity: 0, scale: 0.96, duration: 0.42, stagger: 0.08, ease: "back.out(1.2)" }, time + 0.74);
+      fromIf(selector + " .panel, " + selector + " .repo-frame, " + selector + " .timer-card, " + selector + " .install-card, " + selector + " .release-step", { y: 36, opacity: 0, duration: 0.58, stagger: 0.08, ease: "power2.out" }, time + 0.6);
+      fromIf(selector + " .code", { y: 24, opacity: 0, duration: 0.48, ease: "power1.out" }, time + 0.86);
+    }
+
+    tl.from("#scene-1 .accent-line", { scaleX: 0, transformOrigin: "left center", duration: 0.55, ease: "power2.out" }, 0.2);
+    tl.from("#scene-1 .eyebrow", { y: 26, opacity: 0, duration: 0.52, ease: "power3.out" }, 0.32);
+    tl.from("#scene-1 .headline", { y: 50, opacity: 0, duration: 0.7, ease: "expo.out" }, 0.45);
+    tl.from("#scene-1 .subhead", { y: 30, opacity: 0, duration: 0.55, ease: "power2.out" }, 0.7);
+    tl.from("#scene-1 .pill", { y: 18, opacity: 0, scale: 0.96, duration: 0.44, stagger: 0.08, ease: "back.out(1.2)" }, 0.94);
+    tl.from("#repo-shot-1", { y: 34, opacity: 0, scale: 0.97, duration: 0.72, ease: "power2.out" }, 0.55);
+    tl.to("#repo-shot-1 img", { y: -130, scale: 1.03, duration: 5.2, ease: "sine.inOut" }, 0.9);
+
+    enterScene("#scene-2", 6.0);
+    tl.set("#scene-1", { opacity: 0 }, 6.75);
+
+    enterScene("#scene-3", 13.0);
+    tl.set("#scene-2", { opacity: 0 }, 13.75);
+    tl.from("#scene-3 .timer-number", { y: 18, opacity: 0, duration: 0.45, stagger: 0.12, ease: "power3.out" }, 14.0);
+
+    enterScene("#scene-4", 22.0);
+    tl.set("#scene-3", { opacity: 0 }, 22.75);
+
+    enterScene("#scene-5", 32.0);
+    tl.set("#scene-4", { opacity: 0 }, 32.75);
+    tl.to("#repo-shot-2 img", { y: -110, scale: 1.035, duration: 5.4, ease: "sine.inOut" }, 33.0);
+    tl.to("#scene-5", { opacity: 0, duration: 0.9, ease: "sine.inOut" }, 39.0);
+
+    window.__timelines["health-reminder-github-intro"] = tl;
+  </script>
+</body>
+</html>
