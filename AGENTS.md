@@ -74,4 +74,6 @@ macOS appearance, health reminder, Kanban, and About settings are split between 
 
 App icons live in `Sources/HealthReminder/Resources/`. Keep the full-color app icon and the monochrome status-bar template icon separate; menu bar icons should remain template-safe for dark and light menu bars.
 
+Overlay vertical positioning is constrained by the card frame, not the whole particle canvas. Keep vertical particle padding small; a tall `NSPanel` makes macOS clamp the entire window back downward, which can make `OVERLAY_VERTICAL_OFFSET_RATIO` appear ineffective.
+
 Do not change the Windows version for macOS overlay, particle, Kanban, or main-task recall work unless explicitly requested.

@@ -74,9 +74,9 @@ cp config.example.env ~/.config/HealthReminder/config.env
 - `OVERLAY_TEXT_STYLE`：浮层文字风格，支持 `classic`、`prism`、`aurora`、`warm`，默认 `classic`。
 - `OVERLAY_TEXT_SIZE`：浮层文字大小，支持 `small`、`medium`、`large`，默认 `medium`。
 - `OVERLAY_POSITION`：浮层位置，默认 `upper_center`。
-- `OVERLAY_VERTICAL_OFFSET_RATIO`：浮层相对屏幕中心向上的偏移比例，默认 `0.18`。
+- `OVERLAY_VERTICAL_OFFSET_RATIO`：浮层卡片相对屏幕中心向上的偏移比例，默认 `0.18`，支持 `0` 到 `0.32`；改完需要重启应用。
 - `OVERLAY_PARTICLE_STYLE`：浮层粒子效果，支持 `reconstruct`、`light` 或 `off`，macOS 版由 Vortex 粒子系统渲染。
-- `OVERLAY_PARTICLE_COUNT`、`OVERLAY_PARTICLE_CANVAS_PADDING`：粒子数量和卡片外侧粒子画布范围。
+- `OVERLAY_PARTICLE_COUNT`、`OVERLAY_PARTICLE_CANVAS_PADDING`：粒子数量和卡片横向外侧粒子画布范围；纵向粒子画布会被限制，避免 macOS 把浮层窗口自动往下夹回屏幕内。
 - `OVERLAY_DISPLAY_SECONDS`：全局浮层显示时间，支持 2-12 秒。
 - `OVERLAY_WIDTH`、`OVERLAY_HEIGHT`：浮层尺寸。
 - `ABOUT_DEVELOPER_NAME`、`ABOUT_WEBSITE_URL`、`ABOUT_EMAIL`、`ABOUT_GITHUB_URL`、`ABOUT_COMMUNITY_URL`、`ABOUT_FEEDBACK_URL`：关于页开发者信息，空值不会展示。

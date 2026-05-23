@@ -13,7 +13,7 @@ struct ReminderOverlayView: View {
     let messageBody: String
     let configuration: AppConfiguration.Overlay
     let cardSize: CGSize
-    let canvasPadding: CGFloat
+    let canvasSize: CGSize
     let particleCount: Int
     let onFinished: () -> Void
 
@@ -44,8 +44,8 @@ struct ReminderOverlayView: View {
                     particleScale: configuration.particleScale
                 )
                 .frame(
-                    width: cardSize.width + canvasPadding * 2,
-                    height: cardSize.height + canvasPadding * 2
+                    width: canvasSize.width,
+                    height: canvasSize.height
                 )
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
@@ -62,8 +62,8 @@ struct ReminderOverlayView: View {
             .scaleEffect(cardScale)
         }
         .frame(
-            width: cardSize.width + canvasPadding * 2,
-            height: cardSize.height + canvasPadding * 2
+            width: canvasSize.width,
+            height: canvasSize.height
         )
         .background(Color.clear)
         .onAppear(perform: startTimeline)

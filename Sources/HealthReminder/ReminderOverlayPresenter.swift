@@ -31,19 +31,20 @@ final class ReminderOverlayPresenter {
         isShowing = true
         let message = queue.removeFirst()
         let cardSize = NSSize(width: configuration.width, height: configuration.height)
-        let padding = shouldShowParticles ? effectiveParticleCanvasPadding : 0
+        let horizontalPadding = shouldShowParticles ? effectiveParticleCanvasPadding : 0
+        let verticalPadding = shouldShowParticles ? min(effectiveParticleCanvasPadding, 48) : 0
         let canvasSize = NSSize(
-            width: cardSize.width + padding * 2,
-            height: cardSize.height + padding * 2
+            width: cardSize.width + horizontalPadding * 2,
+            height: cardSize.height + verticalPadding * 2
         )
-        let panel = makePanel(canvasSize: canvasSize, cardSize: cardSize, padding: padding)
+        let panel = makePanel(canvasSize: canvasSize, cardSize: cardSize, verticalPadding: verticalPadding)
 
         let rootView = ReminderOverlayView(
             title: message.title,
             messageBody: message.body,
             configuration: configuration,
             cardSize: CGSize(width: cardSize.width, height: cardSize.height),
-            canvasPadding: padding,
+            canvasSize: CGSize(width: canvasSize.width, height: canvasSize.height),
             particleCount: effectiveParticleCount,
             onFinished: { [weak self, weak panel] in
                 panel?.close()
@@ -89,8 +90,8 @@ final class ReminderOverlayPresenter {
         )
     }
 
-    private func makePanel(canvasSize: NSSize, cardSize: NSSize, padding: CGFloat) -> NSPanel {
-        let frame = overlayFrame(canvasSize: canvasSize, cardSize: cardSize, padding: padding)
+    private func makePanel(canvasSize: NSSize, cardSize: NSSize, verticalPadding: CGFloat) -> NSPanel {
+        let frame = overlayFrame(canvasSize: canvasSize, cardSize: cardSize, verticalPadding: verticalPadding)
         let panel = NSPanel(
             contentRect: frame,
             styleMask: [.borderless, .nonactivatingPanel],
@@ -110,7 +111,7 @@ final class ReminderOverlayPresenter {
         return panel
     }
 
-    private func overlayFrame(canvasSize: NSSize, cardSize: NSSize, padding: CGFloat) -> NSRect {
+    private func overlayFrame(canvasSize: NSSize, cardSize: NSSize, verticalPadding: CGFloat) -> NSRect {
         let screenFrame = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
         let desiredCardCenterY: CGFloat
 
@@ -122,10 +123,11 @@ final class ReminderOverlayPresenter {
         }
 
         let safeMargin: CGFloat = 24
-        let desiredOriginY = desiredCardCenterY - cardSize.height / 2 - padding
-        let minY = screenFrame.minY + safeMargin
-        let maxY = screenFrame.maxY - canvasSize.height - safeMargin
-        let originY = min(max(desiredOriginY, minY), maxY)
+        let desiredCardOriginY = desiredCardCenterY - cardSize.height / 2
+        let minCardOriginY = screenFrame.minY + safeMargin
+        let maxCardOriginY = screenFrame.maxY - cardSize.height - safeMargin
+        let cardOriginY = min(max(desiredCardOriginY, minCardOriginY), maxCardOriginY)
+        let originY = cardOriginY - verticalPadding
 
         return NSRect(
             x: screenFrame.midX - canvasSize.width / 2,
