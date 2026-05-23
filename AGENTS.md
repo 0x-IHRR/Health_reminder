@@ -50,7 +50,7 @@ hdiutil create -volname HealthReminder -srcfolder build/HealthReminder.app -ov -
 
 Creates the local release DMG. Keep `Scripts/package_app.sh` version, Git tag, DMG filename, and GitHub Release version in sync.
 
-Current release target is `v0.5.0`.
+Current release target is `v0.5.1`.
 
 ## Coding Style & Naming Conventions
 
