@@ -27,6 +27,8 @@ public struct AppConfiguration: Equatable {
         public let displaySeconds: TimeInterval
         public let fadeInSeconds: TimeInterval
         public let fadeOutSeconds: TimeInterval
+        public let backdropStyle: String
+        public let backdropOpacity: Double
         public let width: Double
         public let height: Double
         public let theme: String
@@ -48,6 +50,8 @@ public struct AppConfiguration: Equatable {
             displaySeconds: TimeInterval,
             fadeInSeconds: TimeInterval,
             fadeOutSeconds: TimeInterval,
+            backdropStyle: String,
+            backdropOpacity: Double,
             width: Double,
             height: Double,
             theme: String,
@@ -68,6 +72,8 @@ public struct AppConfiguration: Equatable {
             self.displaySeconds = displaySeconds
             self.fadeInSeconds = fadeInSeconds
             self.fadeOutSeconds = fadeOutSeconds
+            self.backdropStyle = backdropStyle
+            self.backdropOpacity = backdropOpacity
             self.width = width
             self.height = height
             self.theme = theme
@@ -222,6 +228,8 @@ public struct AppConfiguration: Equatable {
             displaySeconds: 4,
             fadeInSeconds: 0.35,
             fadeOutSeconds: 0.5,
+            backdropStyle: "off",
+            backdropOpacity: 0.72,
             width: 420,
             height: 132,
             theme: "dark_particle",
@@ -307,6 +315,16 @@ public struct AppConfiguration: Equatable {
                 fadeOutSeconds: nonNegativeTimeInterval(
                     overrides["OVERLAY_FADE_OUT_SECONDS"],
                     defaultValue: overlayDefaults.fadeOutSeconds
+                ),
+                backdropStyle: backdropStyle(
+                    overrides["OVERLAY_BACKDROP_STYLE"],
+                    defaultValue: overlayDefaults.backdropStyle
+                ),
+                backdropOpacity: boundedDouble(
+                    overrides["OVERLAY_BACKDROP_OPACITY"],
+                    defaultValue: overlayDefaults.backdropOpacity,
+                    minimum: 0.2,
+                    maximum: 0.9
                 ),
                 width: positiveDouble(overrides["OVERLAY_WIDTH"], defaultValue: overlayDefaults.width),
                 height: positiveDouble(overrides["OVERLAY_HEIGHT"], defaultValue: overlayDefaults.height),
@@ -571,6 +589,11 @@ public struct AppConfiguration: Equatable {
     private static func particleStyle(_ value: String?, defaultValue: String) -> String {
         let normalizedValue = nonEmptyString(value, defaultValue: defaultValue).lowercased()
         return ["reconstruct", "light", "off"].contains(normalizedValue) ? normalizedValue : defaultValue
+    }
+
+    private static func backdropStyle(_ value: String?, defaultValue: String) -> String {
+        let normalizedValue = nonEmptyString(value, defaultValue: defaultValue).lowercased()
+        return ["off", "dim", "dim_glow"].contains(normalizedValue) ? normalizedValue : defaultValue
     }
 
     private static func overlayTheme(_ value: String?, defaultValue: String) -> String {

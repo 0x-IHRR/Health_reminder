@@ -19,6 +19,7 @@ final class OverlaySettingsWindowController: NSWindowController {
     private let textStylePopUp = NSPopUpButton()
     private let textSizePopUp = NSPopUpButton()
     private let displaySecondsField = NSTextField()
+    private let backdropStylePopUp = NSPopUpButton()
     private let particleStylePopUp = NSPopUpButton()
     private lazy var overlayPreviewHostingView = NSHostingView(
         rootView: ReminderOverlayPreviewView(
@@ -233,9 +234,17 @@ final class OverlaySettingsWindowController: NSWindowController {
                 ("off", "关闭粒子")
             ]
         )
+        configure(
+            backdropStylePopUp,
+            items: [
+                ("off", "关闭"),
+                ("dim", "暗幕"),
+                ("dim_glow", "暗幕聚焦")
+            ]
+        )
         displaySecondsField.placeholderString = "2-12"
         displaySecondsField.alignment = .right
-        for control in [themePopUp, textStylePopUp, textSizePopUp, particleStylePopUp] {
+        for control in [themePopUp, textStylePopUp, textSizePopUp, backdropStylePopUp, particleStylePopUp] {
             control.target = self
             control.action = #selector(updateOverlayPreview)
         }
@@ -251,6 +260,7 @@ final class OverlaySettingsWindowController: NSWindowController {
             [label("文字风格"), textStylePopUp],
             [label("字号"), textSizePopUp],
             [label("显示时间"), displaySecondsField],
+            [label("专注暗幕"), backdropStylePopUp],
             [label("粒子效果"), particleStylePopUp]
         ])
         form.column(at: 0).xPlacement = .trailing
@@ -486,6 +496,7 @@ final class OverlaySettingsWindowController: NSWindowController {
         select(themePopUp, representedObject: configuration.overlay.theme)
         select(textStylePopUp, representedObject: configuration.overlay.textStyle)
         select(textSizePopUp, representedObject: configuration.overlay.textSize)
+        select(backdropStylePopUp, representedObject: configuration.overlay.backdropStyle)
         select(particleStylePopUp, representedObject: configuration.overlay.particleStyle == "off" ? "off" : "reconstruct")
         displaySecondsField.stringValue = formattedSeconds(configuration.overlay.displaySeconds)
         kanbanPathField.stringValue = configuration.kanbanPath
@@ -622,6 +633,7 @@ final class OverlaySettingsWindowController: NSWindowController {
                 "OVERLAY_TEXT_STYLE": selectedValue(from: textStylePopUp),
                 "OVERLAY_TEXT_SIZE": selectedValue(from: textSizePopUp),
                 "OVERLAY_DISPLAY_SECONDS": try displaySecondsValue(),
+                "OVERLAY_BACKDROP_STYLE": selectedValue(from: backdropStylePopUp),
                 "OVERLAY_PARTICLE_STYLE": selectedValue(from: particleStylePopUp)
             ]
             updates.merge(try healthReminderUpdates()) { _, new in new }
@@ -757,6 +769,10 @@ final class OverlaySettingsWindowController: NSWindowController {
             displaySeconds: min(max(displaySeconds, 2), 12),
             fadeInSeconds: current.fadeInSeconds,
             fadeOutSeconds: current.fadeOutSeconds,
+            backdropStyle: selectedValue(from: backdropStylePopUp).isEmpty
+                ? current.backdropStyle
+                : selectedValue(from: backdropStylePopUp),
+            backdropOpacity: current.backdropOpacity,
             width: current.width,
             height: current.height,
             theme: selectedValue(from: themePopUp).isEmpty ? current.theme : selectedValue(from: themePopUp),

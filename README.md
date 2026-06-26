@@ -75,6 +75,8 @@ cp config.example.env ~/.config/HealthReminder/config.env
 - `OVERLAY_TEXT_SIZE`：浮层文字大小，支持 `small`、`medium`、`large`，默认 `medium`。
 - `OVERLAY_POSITION`：浮层位置，默认 `upper_center`。
 - `OVERLAY_VERTICAL_OFFSET_RATIO`：浮层卡片相对屏幕中心向上的偏移比例，默认 `0.18`，支持 `0` 到 `0.32`；改完需要重启应用。
+- `OVERLAY_BACKDROP_STYLE`：提醒出现时的专注暗幕，支持 `off`、`dim`、`dim_glow`，默认 `off`；这是视觉遮罩，不会调整系统屏幕亮度，也不会锁定鼠标键盘。
+- `OVERLAY_BACKDROP_OPACITY`：专注暗幕透明度，支持 `0.2`-`0.9`，默认 `0.72`。
 - `OVERLAY_PARTICLE_STYLE`：浮层粒子效果，支持 `reconstruct`、`light` 或 `off`，macOS 版由 Vortex 粒子系统渲染。
 - `OVERLAY_PARTICLE_COUNT`、`OVERLAY_PARTICLE_CANVAS_PADDING`：粒子数量和卡片横向外侧粒子画布范围；纵向粒子画布会被限制，避免 macOS 把浮层窗口自动往下夹回屏幕内。
 - `OVERLAY_DISPLAY_SECONDS`：全局浮层显示时间，支持 2-12 秒。
