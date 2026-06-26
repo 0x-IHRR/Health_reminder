@@ -38,6 +38,7 @@ final class OverlaySettingsWindowController: NSWindowController {
     private let aboutCommunityURLField = NSTextField()
     private let aboutFeedbackURLField = NSTextField()
     private let healthRemindersEnabledButton = NSButton(checkboxWithTitle: "启用健康提醒", target: nil, action: nil)
+    private let healthReminderCountingModePopUp = NSPopUpButton()
     private let healthReminderRowsStack = NSStackView()
     private var healthReminderControls: [HealthReminderControls] = []
 
@@ -294,6 +295,18 @@ final class OverlaySettingsWindowController: NSWindowController {
             "健康提醒",
             help: "健康提醒和主线任务独立计时；这里可以添加、关闭或删除健康提醒。"
         )
+        configure(
+            healthReminderCountingModePopUp,
+            items: [
+                ("screen_awake", "屏幕亮着时计时"),
+                ("input_active", "键鼠活跃时计时")
+            ]
+        )
+        let countingModeForm = NSGridView(views: [
+            [label("计时方式"), healthReminderCountingModePopUp]
+        ])
+        countingModeForm.column(at: 0).xPlacement = .trailing
+        countingModeForm.column(at: 1).width = 220
 
         healthReminderRowsStack.orientation = .vertical
         healthReminderRowsStack.alignment = .leading
@@ -331,7 +344,7 @@ final class OverlaySettingsWindowController: NSWindowController {
         footerStack.alignment = .centerY
         footerStack.spacing = 14
 
-        for view in [titleStack, healthRemindersEnabledButton, scrollView, footerStack] {
+        for view in [titleStack, healthRemindersEnabledButton, countingModeForm, scrollView, footerStack] {
             view.translatesAutoresizingMaskIntoConstraints = false
             container.addArrangedSubview(view)
         }
@@ -508,6 +521,7 @@ final class OverlaySettingsWindowController: NSWindowController {
         aboutCommunityURLField.stringValue = configuration.about.communityURL
         aboutFeedbackURLField.stringValue = configuration.about.feedbackURL
         healthRemindersEnabledButton.state = configuration.healthRemindersEnabled ? .on : .off
+        select(healthReminderCountingModePopUp, representedObject: configuration.healthReminderCountingMode)
         setHealthReminders(configuration.healthReminders)
         updateOverlayPreview()
     }
@@ -798,6 +812,7 @@ final class OverlaySettingsWindowController: NSWindowController {
         let reminders = try healthReminderConfigurations()
         var updates: [String: String] = [
             "HEALTH_REMINDERS_ENABLED": healthRemindersEnabledButton.state == .on ? "true" : "false",
+            "HEALTH_REMINDER_COUNTING_MODE": selectedValue(from: healthReminderCountingModePopUp),
             "HEALTH_REMINDER_IDS": reminders.map(\.id).joined(separator: ",")
         ]
 

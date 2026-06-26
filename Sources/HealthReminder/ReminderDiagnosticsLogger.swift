@@ -20,12 +20,16 @@ final class ReminderDiagnosticsLogger {
             "launch tickInterval=\(format(configuration.tickInterval)) " +
                 "idleThreshold=\(format(configuration.idleThreshold)) " +
                 "healthEnabled=\(configuration.healthRemindersEnabled) " +
+                "healthCountingMode=\(configuration.healthReminderCountingMode) " +
                 "activeHealthIDs=\(activeHealthIDs)"
         )
     }
 
     func logSnapshot(
         idleSeconds: TimeInterval,
+        healthCountingMode: String,
+        screenAwake: Bool,
+        healthShouldPause: Bool,
         healthState: ReminderEngineState,
         nextHealthReminder: ReminderProgress?,
         focusTaskIsSet: Bool,
@@ -38,6 +42,9 @@ final class ReminderDiagnosticsLogger {
 
         write(
             "snapshot idle=\(format(idleSeconds)) " +
+                "healthCountingMode=\(healthCountingMode) " +
+                "screenAwake=\(screenAwake) " +
+                "healthShouldPause=\(healthShouldPause) " +
                 "healthState=\(healthState.logValue) " +
                 "nextHealth=\(nextHealth) " +
                 "focusTaskSet=\(focusTaskIsSet) " +

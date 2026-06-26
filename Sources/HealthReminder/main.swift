@@ -35,8 +35,7 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
         reminderEngine = ReminderEngine(
             reminders: reminderDefinitions(),
             idleThreshold: configuration.idleThreshold,
-            tickInterval: configuration.tickInterval,
-            pausesWhenIdle: false
+            tickInterval: configuration.tickInterval
         )
         focusReminderEngine = FocusReminderEngine(
             interval: configuration.focusReminderInterval,
@@ -162,8 +161,13 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
             .combinedSessionState,
             eventType: anyInputEventType
         )
+        let screenAwake = isAnyDisplayAwake()
+        let healthShouldPause = shouldPauseHealthReminder(
+            idleSeconds: idleSeconds,
+            screenAwake: screenAwake
+        )
 
-        let healthResult = reminderEngine.tick(idleSeconds: idleSeconds)
+        let healthResult = reminderEngine.tick(shouldPause: healthShouldPause)
         let focusResult = focusReminderEngine.tick(idleSeconds: idleSeconds)
         if healthResult.shouldSendReminder || focusResult.shouldRemind {
             diagnosticsLogger.logTriggered(
@@ -178,11 +182,43 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
             overlayPresenter.show(title: message.title, body: message.body)
         }
 
-        logDiagnosticsSnapshotIfNeeded(idleSeconds: idleSeconds)
+        logDiagnosticsSnapshotIfNeeded(
+            idleSeconds: idleSeconds,
+            screenAwake: screenAwake,
+            healthShouldPause: healthShouldPause
+        )
         updateMenu()
     }
 
-    private func logDiagnosticsSnapshotIfNeeded(idleSeconds: TimeInterval) {
+    private func shouldPauseHealthReminder(idleSeconds: TimeInterval, screenAwake: Bool) -> Bool {
+        switch configuration.healthReminderCountingMode {
+        case "input_active":
+            return idleSeconds >= configuration.idleThreshold
+        default:
+            return !screenAwake
+        }
+    }
+
+    private func isAnyDisplayAwake() -> Bool {
+        let maximumDisplayCount: UInt32 = 16
+        var activeDisplays = [CGDirectDisplayID](repeating: 0, count: Int(maximumDisplayCount))
+        var activeDisplayCount: UInt32 = 0
+        let result = CGGetActiveDisplayList(maximumDisplayCount, &activeDisplays, &activeDisplayCount)
+
+        guard result == .success, activeDisplayCount > 0 else {
+            return CGDisplayIsAsleep(CGMainDisplayID()) == 0
+        }
+
+        return activeDisplays.prefix(Int(activeDisplayCount)).contains { displayID in
+            CGDisplayIsAsleep(displayID) == 0
+        }
+    }
+
+    private func logDiagnosticsSnapshotIfNeeded(
+        idleSeconds: TimeInterval,
+        screenAwake: Bool,
+        healthShouldPause: Bool
+    ) {
         let now = Date()
         if let lastDiagnosticsSnapshotDate,
            now.timeIntervalSince(lastDiagnosticsSnapshotDate) < 60 {
@@ -195,6 +231,9 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
             : max(0, configuration.focusReminderInterval - focusReminderEngine.elapsedActiveTime)
         diagnosticsLogger.logSnapshot(
             idleSeconds: idleSeconds,
+            healthCountingMode: configuration.healthReminderCountingMode,
+            screenAwake: screenAwake,
+            healthShouldPause: healthShouldPause,
             healthState: reminderEngine.state,
             nextHealthReminder: reminderEngine.nextReminder,
             focusTaskIsSet: focusReminderEngine.currentTask != nil,

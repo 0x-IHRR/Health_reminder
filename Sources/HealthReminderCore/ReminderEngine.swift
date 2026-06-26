@@ -80,7 +80,11 @@ public struct ReminderEngine {
     }
 
     public mutating func tick(idleSeconds: TimeInterval) -> ReminderTickResult {
-        if pausesWhenIdle && idleSeconds >= idleThreshold {
+        tick(shouldPause: pausesWhenIdle && idleSeconds >= idleThreshold)
+    }
+
+    public mutating func tick(shouldPause: Bool) -> ReminderTickResult {
+        if shouldPause {
             updateOverallState(isIdle: true)
             return ReminderTickResult(remindersToSend: [])
         }

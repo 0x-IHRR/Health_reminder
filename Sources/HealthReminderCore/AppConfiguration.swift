@@ -136,6 +136,7 @@ public struct AppConfiguration: Equatable {
     public let kanbanPath: String
     public let kanbanInboxSection: String
     public let healthRemindersEnabled: Bool
+    public let healthReminderCountingMode: String
     public let healthReminderIDs: [String]
     public let healthReminders: [HealthReminderConfiguration]
     public let overlay: Overlay
@@ -153,6 +154,7 @@ public struct AppConfiguration: Equatable {
         overlay: Overlay,
         about: About = .defaults,
         healthRemindersEnabled: Bool = true,
+        healthReminderCountingMode: String = "screen_awake",
         healthReminderIDs: [String]? = nil,
         healthReminders: [HealthReminderConfiguration]? = nil
     ) {
@@ -165,6 +167,7 @@ public struct AppConfiguration: Equatable {
         self.kanbanPath = kanbanPath
         self.kanbanInboxSection = kanbanInboxSection
         self.healthRemindersEnabled = healthRemindersEnabled
+        self.healthReminderCountingMode = healthReminderCountingMode
         let resolvedHealthReminders = healthReminders ?? Self.defaultHealthReminders(
             movementInterval: movementInterval,
             waterInterval: waterInterval,
@@ -400,6 +403,10 @@ public struct AppConfiguration: Equatable {
                 overrides["HEALTH_REMINDERS_ENABLED"],
                 defaultValue: defaults.healthRemindersEnabled
             ),
+            healthReminderCountingMode: healthReminderCountingMode(
+                overrides["HEALTH_REMINDER_COUNTING_MODE"],
+                defaultValue: defaults.healthReminderCountingMode
+            ),
             healthReminderIDs: healthReminderIDs,
             healthReminders: healthReminders
         )
@@ -554,6 +561,11 @@ public struct AppConfiguration: Equatable {
             .filter { seenIDs.insert($0).inserted }
 
         return parsedIDs.isEmpty ? defaultValue : parsedIDs
+    }
+
+    private static func healthReminderCountingMode(_ value: String?, defaultValue: String) -> String {
+        let normalizedValue = nonEmptyString(value, defaultValue: defaultValue).lowercased()
+        return ["screen_awake", "input_active"].contains(normalizedValue) ? normalizedValue : defaultValue
     }
 
     private static func isSupportedHealthReminderID(_ id: String) -> Bool {

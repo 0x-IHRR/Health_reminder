@@ -64,6 +64,23 @@ final class ReminderEngineTests: XCTestCase {
         XCTAssertEqual(engine.progress(for: "movement")?.elapsedActiveTime, 0)
     }
 
+    func testExplicitPauseStopsReminderProgressUntilResumed() {
+        var engine = makeEngine()
+
+        _ = engine.tick(shouldPause: false)
+        let pausedResult = engine.tick(shouldPause: true)
+
+        XCTAssertEqual(pausedResult.remindersToSend, [])
+        XCTAssertEqual(engine.progress(for: "movement")?.elapsedActiveTime, 1)
+        XCTAssertEqual(engine.state, .pausedByIdle)
+
+        _ = engine.tick(shouldPause: false)
+        let resumedResult = engine.tick(shouldPause: false)
+
+        XCTAssertEqual(resumedResult.remindersToSend.map(\.id), ["movement"])
+        XCTAssertEqual(engine.state, .tracking)
+    }
+
     func testAutoResetDoesNotCreateRepeatReminders() {
         var engine = makeEngine()
 

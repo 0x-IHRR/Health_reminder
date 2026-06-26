@@ -20,6 +20,7 @@ final class AppConfigurationTests: XCTestCase {
             TICK_INTERVAL_SECONDS=2
             KANBAN_PATH=/tmp/Kanban.md
             KANBAN_INBOX_SECTION=Inbox
+            HEALTH_REMINDER_COUNTING_MODE=input_active
             OVERLAY_DISPLAY_SECONDS=3
             OVERLAY_FADE_IN_SECONDS=0.2
             OVERLAY_FADE_OUT_SECONDS=0.4
@@ -54,6 +55,7 @@ final class AppConfigurationTests: XCTestCase {
         XCTAssertEqual(configuration.waterInterval, 2400)
         XCTAssertEqual(configuration.postureInterval, 3600)
         XCTAssertEqual(configuration.healthRemindersEnabled, true)
+        XCTAssertEqual(configuration.healthReminderCountingMode, "input_active")
         XCTAssertEqual(configuration.healthReminderIDs, ["rest", "water", "posture", "medicine"])
         XCTAssertEqual(configuration.healthReminders.first { $0.id == "rest" }?.interval, 1200)
         XCTAssertEqual(configuration.healthReminders.first { $0.id == "water" }?.interval, 2400)
@@ -176,6 +178,20 @@ final class AppConfigurationTests: XCTestCase {
         XCTAssertEqual(medicine?.title, "吃药")
     }
 
+    func testHealthReminderCountingModeDefaultsToScreenAwake() {
+        let configuration = AppConfiguration.load(overrides: [:])
+
+        XCTAssertEqual(configuration.healthReminderCountingMode, "screen_awake")
+    }
+
+    func testSupportedHealthReminderCountingModesAreAccepted() {
+        for mode in ["screen_awake", "input_active"] {
+            let configuration = AppConfiguration.load(envContents: "HEALTH_REMINDER_COUNTING_MODE=\(mode)")
+
+            XCTAssertEqual(configuration.healthReminderCountingMode, mode)
+        }
+    }
+
     func testInvalidValuesFallBackToDefaults() {
         let configuration = AppConfiguration.load(
             envContents: """
@@ -184,6 +200,7 @@ final class AppConfigurationTests: XCTestCase {
             TICK_INTERVAL_SECONDS=0
             KANBAN_PATH=
             KANBAN_INBOX_SECTION=
+            HEALTH_REMINDER_COUNTING_MODE=wall_clock
             OVERLAY_WIDTH=-20
             OVERLAY_DISPLAY_SECONDS=1
             OVERLAY_FADE_IN_SECONDS=-0.2
@@ -208,6 +225,7 @@ final class AppConfigurationTests: XCTestCase {
         XCTAssertEqual(configuration.tickInterval, AppConfiguration.defaults.tickInterval)
         XCTAssertEqual(configuration.kanbanPath, AppConfiguration.defaults.kanbanPath)
         XCTAssertEqual(configuration.kanbanInboxSection, "")
+        XCTAssertEqual(configuration.healthReminderCountingMode, AppConfiguration.defaults.healthReminderCountingMode)
         XCTAssertEqual(configuration.overlay.width, AppConfiguration.defaults.overlay.width)
         XCTAssertEqual(configuration.overlay.displaySeconds, AppConfiguration.defaults.overlay.displaySeconds)
         XCTAssertEqual(configuration.overlay.fadeInSeconds, AppConfiguration.defaults.overlay.fadeInSeconds)
@@ -358,6 +376,7 @@ final class AppConfigurationTests: XCTestCase {
                 "HEALTH_REMINDER_WATER_ENABLED": "true",
                 "HEALTH_REMINDER_IDS": "water,custom_1",
                 "HEALTH_REMINDERS_ENABLED": "true",
+                "HEALTH_REMINDER_COUNTING_MODE": "screen_awake",
                 "HEALTH_REMINDER_WATER_TITLE": "补水",
                 "HEALTH_REMINDER_WATER_BODY": "喝几口水。",
                 "HEALTH_REMINDER_WATER_INTERVAL_SECONDS": "1200",
@@ -372,6 +391,7 @@ final class AppConfigurationTests: XCTestCase {
         XCTAssertTrue(contents.contains("FOCUS_REMINDER_INTERVAL_SECONDS=900"))
         XCTAssertTrue(contents.contains("UNKNOWN_KEY=keep-me"))
         XCTAssertTrue(contents.contains("HEALTH_REMINDERS_ENABLED=true"))
+        XCTAssertTrue(contents.contains("HEALTH_REMINDER_COUNTING_MODE=screen_awake"))
         XCTAssertTrue(contents.contains("HEALTH_REMINDER_IDS=water,custom_1"))
         XCTAssertTrue(contents.contains("HEALTH_REMINDER_WATER_ENABLED=true"))
         XCTAssertTrue(contents.contains("HEALTH_REMINDER_WATER_TITLE=补水"))
