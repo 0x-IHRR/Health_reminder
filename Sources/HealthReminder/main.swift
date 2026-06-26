@@ -7,6 +7,7 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
     private let configuration = AppConfiguration.load(from: AppConfiguration.localConfigURL)
     private let anyInputEventType = CGEventType(rawValue: UInt32.max)!
     private let bundleIdentifier = "com.healthreminder.app"
+    private let diagnosticsLogger = ReminderDiagnosticsLogger()
 
     private let focusTaskStore = FocusTaskStore()
     private let kanbanTaskReader = KanbanTaskReader()
@@ -27,19 +28,25 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
     private var reminderEngine: ReminderEngine!
     private var focusReminderEngine: FocusReminderEngine!
     private var timer: Timer?
+    private var lastDiagnosticsSnapshotDate: Date?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         reminderEngine = ReminderEngine(
             reminders: reminderDefinitions(),
             idleThreshold: configuration.idleThreshold,
-            tickInterval: configuration.tickInterval
+            tickInterval: configuration.tickInterval,
+            pausesWhenIdle: false
         )
         focusReminderEngine = FocusReminderEngine(
             interval: configuration.focusReminderInterval,
             idleThreshold: configuration.idleThreshold,
             tickInterval: configuration.tickInterval,
             currentTask: focusTaskStore.currentTask
+        )
+        diagnosticsLogger.logLaunch(
+            configuration: configuration,
+            activeHealthReminderIDs: reminderDefinitions().map(\.id)
         )
         configureMenuBar()
         installLaunchAgentIfRunningFromAppBundle()
@@ -158,6 +165,12 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
 
         let healthResult = reminderEngine.tick(idleSeconds: idleSeconds)
         let focusResult = focusReminderEngine.tick(idleSeconds: idleSeconds)
+        if healthResult.shouldSendReminder || focusResult.shouldRemind {
+            diagnosticsLogger.logTriggered(
+                healthReminderIDs: healthResult.remindersToSend.map(\.id),
+                focusTaskTriggered: focusResult.shouldRemind
+            )
+        }
         if let message = ReminderPresentationComposer.compose(
             healthReminders: healthResult.remindersToSend,
             focusTask: focusResult.taskToRemind
@@ -165,7 +178,29 @@ private final class HealthReminderApp: NSObject, NSApplicationDelegate, NSMenuDe
             overlayPresenter.show(title: message.title, body: message.body)
         }
 
+        logDiagnosticsSnapshotIfNeeded(idleSeconds: idleSeconds)
         updateMenu()
+    }
+
+    private func logDiagnosticsSnapshotIfNeeded(idleSeconds: TimeInterval) {
+        let now = Date()
+        if let lastDiagnosticsSnapshotDate,
+           now.timeIntervalSince(lastDiagnosticsSnapshotDate) < 60 {
+            return
+        }
+
+        lastDiagnosticsSnapshotDate = now
+        let focusRemaining = focusReminderEngine.currentTask == nil
+            ? 0
+            : max(0, configuration.focusReminderInterval - focusReminderEngine.elapsedActiveTime)
+        diagnosticsLogger.logSnapshot(
+            idleSeconds: idleSeconds,
+            healthState: reminderEngine.state,
+            nextHealthReminder: reminderEngine.nextReminder,
+            focusTaskIsSet: focusReminderEngine.currentTask != nil,
+            focusState: focusReminderEngine.state,
+            focusRemainingActiveTime: focusRemaining
+        )
     }
 
     private func refreshKanbanSubmenu() {

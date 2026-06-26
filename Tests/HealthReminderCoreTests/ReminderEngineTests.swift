@@ -40,6 +40,30 @@ final class ReminderEngineTests: XCTestCase {
         XCTAssertEqual(engine.state, .pausedByIdle)
     }
 
+    func testCanKeepHealthRemindersRunningWhileInputIsIdle() {
+        var engine = ReminderEngine(
+            reminders: [
+                ReminderDefinition(
+                    id: "movement",
+                    title: "活动",
+                    body: "动一下。",
+                    interval: 3
+                )
+            ],
+            idleThreshold: 60,
+            tickInterval: 1,
+            pausesWhenIdle: false
+        )
+
+        _ = engine.tick(idleSeconds: 120)
+        _ = engine.tick(idleSeconds: 120)
+        let result = engine.tick(idleSeconds: 120)
+
+        XCTAssertEqual(result.remindersToSend.map(\.id), ["movement"])
+        XCTAssertEqual(engine.state, .tracking)
+        XCTAssertEqual(engine.progress(for: "movement")?.elapsedActiveTime, 0)
+    }
+
     func testAutoResetDoesNotCreateRepeatReminders() {
         var engine = makeEngine()
 

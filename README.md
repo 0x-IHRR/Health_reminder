@@ -69,6 +69,7 @@ cp config.example.env ~/.config/HealthReminder/config.env
 - `HEALTH_REMINDER_<SLOT>_TITLE`、`HEALTH_REMINDER_<SLOT>_BODY`：健康提醒标题和正文，`<SLOT>` 支持内置 `REST`、`WATER`、`POSTURE`、`MEDICINE`，也支持 `CUSTOM_1` 这类自定义 ID。
 - `HEALTH_REMINDER_<SLOT>_INTERVAL_SECONDS`：健康提醒间隔秒数。
 - 旧的 `HEALTH_MOVEMENT_INTERVAL_SECONDS`、`HEALTH_WATER_INTERVAL_SECONDS`、`HEALTH_POSTURE_INTERVAL_SECONDS` 仍会读取；设置窗口保存时会写入新的 `HEALTH_REMINDER_*` 键。
+- 健康提醒按真实时间计时；主线任务召回仍按活跃使用时间计时。诊断日志写入 `~/Library/Logs/HealthReminder/reminder.log`，只记录计时状态和 reminder ID，不记录任务标题或正文。
 - `OVERLAY_THEME`：浮层视觉主题，支持 `dark_particle`、`light_particle`；旧值 `dark_neon` 会映射到 `dark_particle`。
 - `OVERLAY_TEXT_ALIGNMENT`：浮层文字对齐，默认 `center`。
 - `OVERLAY_TEXT_STYLE`：浮层文字风格，支持 `classic`、`prism`、`aurora`、`warm`，默认 `classic`。

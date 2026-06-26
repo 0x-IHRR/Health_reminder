@@ -45,6 +45,7 @@ public struct ReminderTickResult: Equatable {
 public struct ReminderEngine {
     public let idleThreshold: TimeInterval
     public let tickInterval: TimeInterval
+    public let pausesWhenIdle: Bool
 
     public private(set) var state: ReminderEngineState
     private var records: [ReminderRecord]
@@ -52,12 +53,14 @@ public struct ReminderEngine {
     public init(
         reminders: [ReminderDefinition],
         idleThreshold: TimeInterval,
-        tickInterval: TimeInterval
+        tickInterval: TimeInterval,
+        pausesWhenIdle: Bool = true
     ) {
         precondition(Set(reminders.map(\.id)).count == reminders.count, "Reminder IDs must be unique.")
 
         self.idleThreshold = idleThreshold
         self.tickInterval = tickInterval
+        self.pausesWhenIdle = pausesWhenIdle
         self.state = .tracking
         self.records = reminders.map { ReminderRecord(definition: $0) }
     }
@@ -77,7 +80,7 @@ public struct ReminderEngine {
     }
 
     public mutating func tick(idleSeconds: TimeInterval) -> ReminderTickResult {
-        if idleSeconds >= idleThreshold {
+        if pausesWhenIdle && idleSeconds >= idleThreshold {
             updateOverallState(isIdle: true)
             return ReminderTickResult(remindersToSend: [])
         }
