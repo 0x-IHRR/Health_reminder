@@ -23,6 +23,8 @@ final class AppConfigurationTests: XCTestCase {
             OVERLAY_DISPLAY_SECONDS=3
             OVERLAY_FADE_IN_SECONDS=0.2
             OVERLAY_FADE_OUT_SECONDS=0.4
+            OVERLAY_BACKDROP_STYLE=dim_glow
+            OVERLAY_BACKDROP_OPACITY=0.8
             OVERLAY_WIDTH=500
             OVERLAY_HEIGHT=150
             OVERLAY_THEME=light_particle
@@ -64,6 +66,8 @@ final class AppConfigurationTests: XCTestCase {
         XCTAssertEqual(configuration.overlay.displaySeconds, 3)
         XCTAssertEqual(configuration.overlay.fadeInSeconds, 0.2)
         XCTAssertEqual(configuration.overlay.fadeOutSeconds, 0.4)
+        XCTAssertEqual(configuration.overlay.backdropStyle, "dim_glow")
+        XCTAssertEqual(configuration.overlay.backdropOpacity, 0.8)
         XCTAssertEqual(configuration.overlay.width, 500)
         XCTAssertEqual(configuration.overlay.height, 150)
         XCTAssertEqual(configuration.overlay.theme, "light_particle")
@@ -183,6 +187,8 @@ final class AppConfigurationTests: XCTestCase {
             OVERLAY_WIDTH=-20
             OVERLAY_DISPLAY_SECONDS=1
             OVERLAY_FADE_IN_SECONDS=-0.2
+            OVERLAY_BACKDROP_STYLE=blackout
+            OVERLAY_BACKDROP_OPACITY=1.2
             OVERLAY_THEME=white
             OVERLAY_TEXT_ALIGNMENT=left
             OVERLAY_TEXT_STYLE=rainbow
@@ -205,6 +211,8 @@ final class AppConfigurationTests: XCTestCase {
         XCTAssertEqual(configuration.overlay.width, AppConfiguration.defaults.overlay.width)
         XCTAssertEqual(configuration.overlay.displaySeconds, AppConfiguration.defaults.overlay.displaySeconds)
         XCTAssertEqual(configuration.overlay.fadeInSeconds, AppConfiguration.defaults.overlay.fadeInSeconds)
+        XCTAssertEqual(configuration.overlay.backdropStyle, AppConfiguration.defaults.overlay.backdropStyle)
+        XCTAssertEqual(configuration.overlay.backdropOpacity, AppConfiguration.defaults.overlay.backdropOpacity)
         XCTAssertEqual(configuration.overlay.theme, AppConfiguration.defaults.overlay.theme)
         XCTAssertEqual(configuration.overlay.textAlignment, AppConfiguration.defaults.overlay.textAlignment)
         XCTAssertEqual(configuration.overlay.textStyle, AppConfiguration.defaults.overlay.textStyle)
@@ -283,6 +291,14 @@ final class AppConfigurationTests: XCTestCase {
         }
     }
 
+    func testSupportedOverlayBackdropStylesAreAccepted() {
+        for style in ["off", "dim", "dim_glow"] {
+            let configuration = AppConfiguration.load(envContents: "OVERLAY_BACKDROP_STYLE=\(style)")
+
+            XCTAssertEqual(configuration.overlay.backdropStyle, style)
+        }
+    }
+
     func testParseEnvIgnoresCommentsEmptyLinesAndUnknownKeys() {
         let values = AppConfiguration.parseEnv(
             """
@@ -312,6 +328,7 @@ final class AppConfigurationTests: XCTestCase {
                 "OVERLAY_TEXT_STYLE": "warm",
                 "OVERLAY_TEXT_SIZE": "medium",
                 "OVERLAY_DISPLAY_SECONDS": "6",
+                "OVERLAY_BACKDROP_STYLE": "dim_glow",
                 "OVERLAY_PARTICLE_STYLE": "off"
             ]
         )
@@ -323,6 +340,7 @@ final class AppConfigurationTests: XCTestCase {
         XCTAssertTrue(contents.contains("OVERLAY_TEXT_STYLE=warm"))
         XCTAssertTrue(contents.contains("OVERLAY_TEXT_SIZE=medium"))
         XCTAssertTrue(contents.contains("OVERLAY_DISPLAY_SECONDS=6"))
+        XCTAssertTrue(contents.contains("OVERLAY_BACKDROP_STYLE=dim_glow"))
         XCTAssertTrue(contents.contains("OVERLAY_PARTICLE_STYLE=off"))
         XCTAssertFalse(contents.contains("OVERLAY_THEME=dark_particle"))
     }

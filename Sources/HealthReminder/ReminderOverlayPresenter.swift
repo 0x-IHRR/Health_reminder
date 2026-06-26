@@ -37,6 +37,14 @@ final class ReminderOverlayPresenter {
             height: cardSize.height + padding * 2
         )
         let panel = makePanel(canvasSize: canvasSize, cardSize: cardSize, padding: padding)
+        let focusFrame = NSRect(
+            x: panel.frame.minX + padding,
+            y: panel.frame.minY + padding,
+            width: cardSize.width,
+            height: cardSize.height
+        )
+        let backdropPresenter = OverlayBackdropPresenter(configuration: configuration, focusFrame: focusFrame)
+        backdropPresenter.show()
 
         let rootView = ReminderOverlayView(
             title: message.title,
@@ -45,10 +53,12 @@ final class ReminderOverlayPresenter {
             cardSize: CGSize(width: cardSize.width, height: cardSize.height),
             canvasPadding: padding,
             particleCount: effectiveParticleCount,
-            onFinished: { [weak self, weak panel] in
+            onFinished: { [weak self, weak panel, backdropPresenter] in
                 panel?.close()
-                self?.isShowing = false
-                self?.showNextIfNeeded()
+                backdropPresenter.hideThenClose {
+                    self?.isShowing = false
+                    self?.showNextIfNeeded()
+                }
             }
         )
         let hostingView = NSHostingView(rootView: rootView)

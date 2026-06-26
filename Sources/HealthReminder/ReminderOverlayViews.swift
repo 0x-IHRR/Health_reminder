@@ -122,6 +122,28 @@ struct ReminderOverlayPreviewView: View {
                     RoundedRectangle(cornerRadius: style.cornerRadius + 20, style: .continuous)
                         .stroke(Color.white.opacity(style.isLight ? 0.52 : 0.08), lineWidth: 1)
                 }
+                .overlay {
+                    if configuration.backdropStyle != "off" {
+                        RoundedRectangle(cornerRadius: style.cornerRadius + 20, style: .continuous)
+                            .fill(Color.black.opacity(min(configuration.backdropOpacity, 0.64)))
+                    }
+                }
+                .overlay {
+                    if configuration.backdropStyle == "dim_glow" {
+                        RadialGradient(
+                            colors: [
+                                Color.white.opacity(0.14),
+                                Color(red: 0.38, green: 0.68, blue: 1).opacity(0.1),
+                                Color.clear
+                            ],
+                            center: .center,
+                            startRadius: 8,
+                            endRadius: 170
+                        )
+                        .blendMode(.plusLighter)
+                        .clipShape(RoundedRectangle(cornerRadius: style.cornerRadius + 20, style: .continuous))
+                    }
+                }
 
             OverlayCardView(
                 title: title,
