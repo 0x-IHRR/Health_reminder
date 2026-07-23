@@ -113,4 +113,4 @@ hdiutil create -volname HealthReminder -srcfolder build/HealthReminder.app -ov -
 ```
 
 发布新版本时，更新 `VERSION`，创建同版本 Git tag。推送 `v<version>` tag 后，GitHub Actions 会生成 macOS DMG 和 Windows x64 ZIP，并创建 GitHub Release。
-当前最新版本：`v0.5.1`。
+当前最新版本：`v0.5.2`。
