@@ -4,6 +4,7 @@ import SwiftUI
 
 final class OverlayBackdropPresenter {
     private let style: String
+    private let theme: String
     private let opacity: Double
     private let fadeInSeconds: TimeInterval
     private let fadeOutSeconds: TimeInterval
@@ -12,6 +13,7 @@ final class OverlayBackdropPresenter {
 
     init(configuration: AppConfiguration.Overlay, focusFrame: NSRect) {
         self.style = configuration.backdropStyle
+        self.theme = configuration.theme
         self.opacity = configuration.backdropOpacity
         self.fadeInSeconds = configuration.fadeInSeconds
         self.fadeOutSeconds = configuration.fadeOutSeconds
@@ -43,6 +45,7 @@ final class OverlayBackdropPresenter {
             let hostingView = NSHostingView(
                 rootView: OverlayBackdropView(
                     style: style,
+                    theme: theme,
                     opacity: opacity,
                     screenFrame: screen.frame,
                     focusFrame: focusFrame
@@ -94,6 +97,7 @@ final class OverlayBackdropPresenter {
 
 private struct OverlayBackdropView: View {
     let style: String
+    let theme: String
     let opacity: Double
     let screenFrame: NSRect
     let focusFrame: NSRect
@@ -107,7 +111,9 @@ private struct OverlayBackdropView: View {
                     RadialGradient(
                         colors: [
                             Color.white.opacity(0.13),
-                            Color(red: 0.38, green: 0.68, blue: 1).opacity(0.08),
+                            theme == "alert_yellow"
+                                ? Color(red: 1, green: 0.72, blue: 0.04).opacity(0.16)
+                                : Color(red: 0.38, green: 0.68, blue: 1).opacity(0.08),
                             Color.clear
                         ],
                         center: focusCenter(),

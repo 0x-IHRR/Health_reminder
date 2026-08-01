@@ -71,18 +71,18 @@ cp config.example.env ~/.config/HealthReminder/config.env
 - `HEALTH_REMINDER_<SLOT>_INTERVAL_SECONDS`：健康提醒间隔秒数。
 - 旧的 `HEALTH_MOVEMENT_INTERVAL_SECONDS`、`HEALTH_WATER_INTERVAL_SECONDS`、`HEALTH_POSTURE_INTERVAL_SECONDS` 仍会读取；设置窗口保存时会写入新的 `HEALTH_REMINDER_*` 键。
 - 主线任务召回按活跃使用时间计时。诊断日志写入 `~/Library/Logs/HealthReminder/reminder.log`，只记录计时状态、屏幕亮灭状态和 reminder ID，不记录任务标题或正文。
-- `OVERLAY_THEME`：浮层视觉主题，支持 `dark_particle`、`light_particle`；旧值 `dark_neon` 会映射到 `dark_particle`。
+- `OVERLAY_THEME`：提醒卡片视觉主题，支持 `alert_yellow`、`dark_particle`、`light_particle`，默认 `alert_yellow`（醒目黄色）；旧值 `dark_neon` 会映射到 `dark_particle`。
 - `OVERLAY_TEXT_ALIGNMENT`：浮层文字对齐，默认 `center`。
 - `OVERLAY_TEXT_STYLE`：浮层文字风格，支持 `classic`、`prism`、`aurora`、`warm`，默认 `classic`。
-- `OVERLAY_TEXT_SIZE`：浮层文字大小，支持 `small`、`medium`、`large`，默认 `medium`。
+- `OVERLAY_TEXT_SIZE`：浮层文字大小，支持 `small`、`medium`、`large`，默认 `large`。
 - `OVERLAY_POSITION`：浮层位置，默认 `upper_center`。
-- `OVERLAY_VERTICAL_OFFSET_RATIO`：浮层卡片相对屏幕中心向上的偏移比例，默认 `0.18`，支持 `0` 到 `0.32`；改完需要重启应用。
-- `OVERLAY_BACKDROP_STYLE`：提醒出现时的专注暗幕，支持 `off`、`dim`、`dim_glow`，默认 `off`；这是视觉遮罩，不会调整系统屏幕亮度，也不会锁定鼠标键盘。
-- `OVERLAY_BACKDROP_OPACITY`：专注暗幕透明度，支持 `0.2`-`0.9`，默认 `0.72`。
+- `OVERLAY_VERTICAL_OFFSET_RATIO`：提醒卡片相对屏幕中心向上的偏移比例，默认 `0.24`，支持 `0` 到 `0.32`；改完需要重启应用。
+- `OVERLAY_BACKDROP_STYLE`：提醒出现时的专注暗幕，支持 `off`、`dim`、`dim_glow`，默认 `dim_glow`；这是视觉遮罩，不会调整系统屏幕亮度，也不会锁定鼠标键盘。
+- `OVERLAY_BACKDROP_OPACITY`：专注暗幕透明度，支持 `0.2`-`0.9`，默认 `0.8`。
 - `OVERLAY_PARTICLE_STYLE`：浮层粒子效果，支持 `reconstruct`、`light` 或 `off`，macOS 版由 Vortex 粒子系统渲染。
 - `OVERLAY_PARTICLE_COUNT`、`OVERLAY_PARTICLE_CANVAS_PADDING`：粒子数量和卡片横向外侧粒子画布范围；纵向粒子画布会被限制，避免 macOS 把浮层窗口自动往下夹回屏幕内。
 - `OVERLAY_DISPLAY_SECONDS`：全局浮层显示时间，支持 2-12 秒。
-- `OVERLAY_WIDTH`、`OVERLAY_HEIGHT`：浮层尺寸。
+- `OVERLAY_WIDTH`、`OVERLAY_HEIGHT`：提醒卡片尺寸，默认 `560 × 176`。
 - `ABOUT_DEVELOPER_NAME`、`ABOUT_WEBSITE_URL`、`ABOUT_EMAIL`、`ABOUT_GITHUB_URL`、`ABOUT_COMMUNITY_URL`、`ABOUT_FEEDBACK_URL`：关于页开发者信息，空值不会展示。
 
 ## 开发

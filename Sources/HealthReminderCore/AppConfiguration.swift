@@ -231,16 +231,16 @@ public struct AppConfiguration: Equatable {
             displaySeconds: 4,
             fadeInSeconds: 0.35,
             fadeOutSeconds: 0.5,
-            backdropStyle: "off",
-            backdropOpacity: 0.72,
-            width: 420,
-            height: 132,
-            theme: "dark_particle",
+            backdropStyle: "dim_glow",
+            backdropOpacity: 0.8,
+            width: 560,
+            height: 176,
+            theme: "alert_yellow",
             textAlignment: "center",
             textStyle: "classic",
-            textSize: "medium",
+            textSize: "large",
             position: "upper_center",
-            verticalOffsetRatio: 0.18,
+            verticalOffsetRatio: 0.24,
             particleStyle: "reconstruct",
             particleCount: 140,
             particleCanvasPadding: 220,
@@ -615,7 +615,9 @@ public struct AppConfiguration: Equatable {
             return "dark_particle"
         }
 
-        return ["dark_particle", "light_particle"].contains(normalizedValue) ? normalizedValue : defaultValue
+        return ["dark_particle", "light_particle", "alert_yellow"].contains(normalizedValue)
+            ? normalizedValue
+            : defaultValue
     }
 
     private static func textAlignment(_ value: String?, defaultValue: String) -> String {

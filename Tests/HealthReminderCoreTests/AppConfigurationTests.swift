@@ -8,6 +8,20 @@ final class AppConfigurationTests: XCTestCase {
         XCTAssertEqual(configuration, .defaults)
     }
 
+    func testNewInstallationOverlayDefaultsFavorHighAttentionPresentation() {
+        let overlay = AppConfiguration.defaults.overlay
+
+        XCTAssertEqual(overlay.displaySeconds, 4)
+        XCTAssertEqual(overlay.backdropStyle, "dim_glow")
+        XCTAssertEqual(overlay.backdropOpacity, 0.8)
+        XCTAssertEqual(overlay.width, 560)
+        XCTAssertEqual(overlay.height, 176)
+        XCTAssertEqual(overlay.theme, "alert_yellow")
+        XCTAssertEqual(overlay.textSize, "large")
+        XCTAssertEqual(overlay.position, "upper_center")
+        XCTAssertEqual(overlay.verticalOffsetRatio, 0.24)
+    }
+
     func testLoadsSupportedOverridesFromEnvContents() {
         let configuration = AppConfiguration.load(
             envContents: """
@@ -291,6 +305,14 @@ final class AppConfigurationTests: XCTestCase {
         let configuration = AppConfiguration.load(envContents: "OVERLAY_THEME=dark_neon")
 
         XCTAssertEqual(configuration.overlay.theme, "dark_particle")
+    }
+
+    func testSupportedOverlayThemesAreAccepted() {
+        for theme in ["dark_particle", "light_particle", "alert_yellow"] {
+            let configuration = AppConfiguration.load(envContents: "OVERLAY_THEME=\(theme)")
+
+            XCTAssertEqual(configuration.overlay.theme, theme)
+        }
     }
 
     func testSupportedOverlayTextStylesAreAccepted() {

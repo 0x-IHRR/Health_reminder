@@ -207,6 +207,7 @@ final class OverlaySettingsWindowController: NSWindowController {
         configure(
             themePopUp,
             items: [
+                ("alert_yellow", "醒目黄色"),
                 ("dark_particle", "深色粒子"),
                 ("light_particle", "浅色粒子")
             ]

@@ -106,6 +106,18 @@ struct ReminderOverlayPreviewView: View {
         CGSize(width: configuration.width, height: configuration.height)
     }
 
+    private var contentSize: CGSize {
+        CGSize(width: cardSize.width + 64, height: cardSize.height + 64)
+    }
+
+    private var viewportSize: CGSize {
+        CGSize(width: 484, height: 196)
+    }
+
+    private var previewScale: CGFloat {
+        min(viewportSize.width / contentSize.width, viewportSize.height / contentSize.height, 1)
+    }
+
     private var style: OverlayVisualStyle {
         OverlayVisualStyle(
             theme: configuration.theme,
@@ -133,7 +145,9 @@ struct ReminderOverlayPreviewView: View {
                         RadialGradient(
                             colors: [
                                 Color.white.opacity(0.14),
-                                Color(red: 0.38, green: 0.68, blue: 1).opacity(0.1),
+                                style.isAlert
+                                    ? Color(red: 1, green: 0.72, blue: 0.04).opacity(0.18)
+                                    : Color(red: 0.38, green: 0.68, blue: 1).opacity(0.1),
                                 Color.clear
                             ],
                             center: .center,
@@ -153,10 +167,23 @@ struct ReminderOverlayPreviewView: View {
             )
             .frame(width: cardSize.width, height: cardSize.height)
         }
-        .frame(width: cardSize.width + 64, height: cardSize.height + 64)
+        .frame(width: contentSize.width, height: contentSize.height)
+        .scaleEffect(previewScale)
+        .frame(width: viewportSize.width, height: viewportSize.height)
     }
 
     private var previewBackground: LinearGradient {
+        if style.isAlert {
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.12, green: 0.12, blue: 0.13),
+                    Color(red: 0.04, green: 0.05, blue: 0.06)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+
         if style.isLight {
             return LinearGradient(
                 colors: [
@@ -358,6 +385,7 @@ private struct VortexParticleField: View {
 
 struct OverlayVisualStyle {
     let isLight: Bool
+    let isAlert: Bool
     let textStyle: String
     let titleFontSize: CGFloat
     let bodyFontSize: CGFloat
@@ -380,9 +408,49 @@ struct OverlayVisualStyle {
     let vortexScatterColors: VortexSystem.ColorMode
 
     var titleForegroundStyle: AnyShapeStyle {
+        if isAlert {
+            switch textStyle {
+            case "prism":
+                return AnyShapeStyle(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.03, green: 0.12, blue: 0.18),
+                            Color(red: 0.16, green: 0.08, blue: 0.2)
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+            case "aurora":
+                return AnyShapeStyle(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.02, green: 0.15, blue: 0.12),
+                            Color(red: 0.11, green: 0.09, blue: 0.2)
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+            case "warm":
+                return AnyShapeStyle(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.22, green: 0.08, blue: 0.02),
+                            Color(red: 0.08, green: 0.06, blue: 0.03)
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+            default:
+                return AnyShapeStyle(titleColor)
+            }
+        }
+
         switch textStyle {
         case "prism":
-            AnyShapeStyle(
+            return AnyShapeStyle(
                 LinearGradient(
                     colors: isLight
                         ? [
@@ -400,7 +468,7 @@ struct OverlayVisualStyle {
                 )
             )
         case "aurora":
-            AnyShapeStyle(
+            return AnyShapeStyle(
                 LinearGradient(
                     colors: isLight
                         ? [
@@ -418,7 +486,7 @@ struct OverlayVisualStyle {
                 )
             )
         case "warm":
-            AnyShapeStyle(
+            return AnyShapeStyle(
                 LinearGradient(
                     colors: isLight
                         ? [
@@ -434,23 +502,28 @@ struct OverlayVisualStyle {
                 )
             )
         default:
-            AnyShapeStyle(titleColor)
+            return AnyShapeStyle(titleColor)
         }
     }
 
     var bodyForegroundStyle: AnyShapeStyle {
+        if isAlert {
+            return AnyShapeStyle(bodyColor)
+        }
+
         switch textStyle {
         case "aurora" where !isLight:
-            AnyShapeStyle(Color(red: 0.82, green: 0.9, blue: 1).opacity(0.9))
+            return AnyShapeStyle(Color(red: 0.82, green: 0.9, blue: 1).opacity(0.9))
         case "warm" where isLight:
-            AnyShapeStyle(Color(red: 0.28, green: 0.3, blue: 0.34).opacity(0.88))
+            return AnyShapeStyle(Color(red: 0.28, green: 0.3, blue: 0.34).opacity(0.88))
         default:
-            AnyShapeStyle(bodyColor)
+            return AnyShapeStyle(bodyColor)
         }
     }
 
     init(theme: String, textStyle: String, textSize: String) {
         self.textStyle = textStyle
+        isAlert = theme == "alert_yellow"
         switch textSize {
         case "small":
             titleFontSize = 20
@@ -464,6 +537,65 @@ struct OverlayVisualStyle {
         }
 
         switch theme {
+        case "alert_yellow":
+            isLight = true
+            cornerRadius = 34
+            material = .thinMaterial
+            titleColor = Color(red: 0.07, green: 0.07, blue: 0.06).opacity(0.98)
+            bodyColor = Color(red: 0.12, green: 0.1, blue: 0.06).opacity(0.88)
+            cardGradient = LinearGradient(
+                colors: [
+                    Color(red: 1, green: 0.96, blue: 0.1).opacity(0.98),
+                    Color(red: 1, green: 0.78, blue: 0.02).opacity(0.98),
+                    Color(red: 1, green: 0.55, blue: 0).opacity(0.96)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            cardGradientOpacity = 1
+            innerSheenGradient = LinearGradient(
+                colors: [
+                    Color.white.opacity(0.46),
+                    Color(red: 1, green: 0.92, blue: 0.2).opacity(0.24),
+                    Color.clear
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            innerSheenOpacity = 0.86
+            borderGradient = LinearGradient(
+                colors: [
+                    Color.white.opacity(0.82),
+                    Color(red: 1, green: 0.58, blue: 0).opacity(0.9),
+                    Color(red: 0.76, green: 0.28, blue: 0).opacity(0.62)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            hairlineColor = Color.black.opacity(0.14)
+            shadowColor = Color.black.opacity(0.48)
+            shadowRadius = 40
+            shadowY = 20
+            edgeGlowColor = Color(red: 1, green: 0.72, blue: 0.02).opacity(0.5)
+            edgeGlowRadius = 30
+            vortexGatherColors = .randomRamp(
+                [
+                    VortexSystem.Color(red: 1, green: 0.95, blue: 0.32, opacity: 0),
+                    VortexSystem.Color(red: 1, green: 0.84, blue: 0.08, opacity: 0.82),
+                    VortexSystem.Color(red: 1, green: 1, blue: 0.9, opacity: 0)
+                ],
+                [
+                    VortexSystem.Color(red: 1, green: 0.56, blue: 0, opacity: 0),
+                    VortexSystem.Color(red: 1, green: 0.66, blue: 0.02, opacity: 0.68),
+                    VortexSystem.Color(red: 1, green: 0.93, blue: 0.58, opacity: 0)
+                ],
+                [
+                    VortexSystem.Color(red: 1, green: 1, blue: 1, opacity: 0),
+                    VortexSystem.Color(red: 1, green: 1, blue: 0.94, opacity: 0.56),
+                    VortexSystem.Color(red: 1, green: 0.84, blue: 0.12, opacity: 0)
+                ]
+            )
+            vortexScatterColors = vortexGatherColors
         case "light_particle":
             isLight = true
             cornerRadius = 34
