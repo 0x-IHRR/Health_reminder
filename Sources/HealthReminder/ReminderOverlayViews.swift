@@ -21,7 +21,7 @@ enum ReminderCharacterLayout {
     }
 
     static func characterVerticalOffset(for cardSize: CGSize) -> CGFloat {
-        min(max(cardSize.height * 0.18, 26), 44)
+        min(max(cardSize.height * 0.18, 26), 44) - 10
     }
 
     static func bottomPadding(for cardSize: CGSize) -> CGFloat {
