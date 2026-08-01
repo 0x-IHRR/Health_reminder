@@ -13,7 +13,7 @@ enum ReminderCharacterLayout {
     static let horizontalPadding: CGFloat = 20
 
     static func verticalPadding(for cardSize: CGSize) -> CGFloat {
-        min(max(cardSize.height * 0.55, 82), 132)
+        min(max(cardSize.height * 0.78, 110), 170)
     }
 
     static func compositionSize(for cardSize: CGSize) -> CGSize {
@@ -253,14 +253,15 @@ struct CatHoldingReminderCardView: View {
     }
 
     private var catSize: CGSize {
-        CGSize(
-            width: compositionSize.height * 0.666,
-            height: compositionSize.height
+        let height = compositionSize.height * 1.18
+        return CGSize(
+            width: height * 0.666,
+            height: height
         )
     }
 
     private var foregroundCatHeight: CGFloat {
-        verticalPadding + compositionSize.height * 0.045
+        verticalPadding + catSize.height * 0.05
     }
 
     var body: some View {
@@ -282,7 +283,11 @@ struct CatHoldingReminderCardView: View {
                         .frame(height: foregroundCatHeight)
                 }
         }
-        .frame(width: compositionSize.width, height: compositionSize.height)
+        .frame(
+            width: compositionSize.width,
+            height: compositionSize.height,
+            alignment: .top
+        )
         .accessibilityElement(children: .contain)
     }
 
@@ -291,6 +296,7 @@ struct CatHoldingReminderCardView: View {
             .resizable()
             .scaledToFit()
             .frame(width: catSize.width, height: catSize.height)
+            .scaleEffect(x: 1.12, y: 1, anchor: .top)
             .accessibilityHidden(true)
     }
 
