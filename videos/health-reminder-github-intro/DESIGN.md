@@ -2,7 +2,7 @@
 
 ## Overview
 
-This video introduces the HealthReminder GitHub project as a practical desktop utility: quiet, small, and built around real computer activity rather than wall-clock timers.
+This video introduces the HealthReminder GitHub project as a practical desktop utility: quiet, small, and built around screen-awake or input-active usage rules rather than an unconditional wall-clock timer.
 
 The visual identity follows the captured GitHub repository page. It should feel like a developer README brought into motion, not a consumer wellness ad.
 
@@ -29,6 +29,7 @@ The visual identity follows the captured GitHub repository page. It should feel 
 - GitHub-style repo header with branch, release, and language metadata.
 - README panels using dark cards, thin borders, and code blocks.
 - Timeline chips for 30, 60, and 90 minute reminders.
+- Blue-cat reminder character holding a program-rendered alert-yellow card; keep all reminder copy outside the artwork so it remains editable.
 - Platform install cards for macOS and Windows.
 - Release flow strip: update version, tag, GitHub Actions, release artifacts.
 
@@ -37,6 +38,7 @@ The visual identity follows the captured GitHub repository page. It should feel 
 - Calm technical pacing.
 - Use blur crossfades between scenes.
 - Use staggered line entrances for README and command blocks.
+- Let the blue cat and reminder card spring upward together, matching the macOS overlay behavior.
 - Keep screenshots moving subtly with scale and y-pan so the video does not feel like a static screen capture.
 
 ## What Not To Do

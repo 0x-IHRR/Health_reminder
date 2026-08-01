@@ -1,6 +1,6 @@
 # HealthReminder
 
-一个极简健康提醒应用：按正在操作电脑的累计时间，轻量提醒护眼活动、喝水和坐姿肩颈放松。提醒发出后会自动进入下一轮计时。
+一个极简健康提醒应用：健康提醒默认按屏幕亮着的累计时间运行，也可以切换为键盘和鼠标活跃时间；主线任务召回始终按活跃使用时间累计。提醒发出后会自动进入下一轮计时。
 
 目前支持：
 
@@ -17,8 +17,11 @@
 
 ```bash
 bash Scripts/package_app.sh
-open build/HealthReminder.app
+ditto build/HealthReminder.app /Applications/HealthReminder.app
+open /Applications/HealthReminder.app
 ```
+
+更新已经运行的版本时，先退出 HealthReminder 再覆盖 `/Applications/HealthReminder.app`。`build/HealthReminder.app` 适合临时开发预览，不应作为长期自启位置。
 
 ### Windows
 
@@ -29,10 +32,12 @@ Windows 版是自包含包，不需要额外安装 .NET。第一次运行后会�
 ## 行为
 
 - macOS 版常驻菜单栏，Windows 版常驻系统托盘，不显示主窗口。
-- 所有提醒都按键盘或鼠标活跃使用时间累计。
-- 离开电脑超过 60 秒时暂停累计。
+- macOS 健康提醒默认按屏幕亮着的时间累计，屏幕睡眠时暂停；也可以切换成键鼠活跃模式，连续空闲超过 60 秒时暂停。
+- macOS 主线任务召回始终按键盘或鼠标活跃使用时间累计，连续空闲超过 60 秒时暂停。
+- Windows 健康提醒按键盘或鼠标活跃使用时间累计，连续空闲超过 60 秒时暂停。
 - macOS 版提醒以屏幕中上方浮层显示，文字居中，自动淡出，不需要点击确认。
-- macOS 浮层支持 Light/Dark 主题、文字风格、字号和粒子效果配置；出现时可播放短暂粒子凝聚动画，退出时粒子散开，阅读阶段保持安静。
+- macOS 浮层默认使用醒目黄色提醒卡片；蓝猫角色会随卡片从下方弹入并把爪子搭在卡片上沿。角色图片不包含提醒文字，标题和正文仍由应用独立渲染。
+- macOS 浮层支持醒目黄色、Light 和 Dark 主题，以及文字风格、字号和粒子效果配置；出现时可播放短暂粒子凝聚动画，退出时粒子散开，阅读阶段保持安静。
 - 内置健康提醒槽位：
   - 休息 / 放松眼睛：30 分钟，默认开启。
   - 喝水：60 分钟，默认开启。
@@ -44,7 +49,7 @@ Windows 版是自包含包，不需要额外安装 .NET。第一次运行后会�
 - 同一 tick 内多个提醒同时触发时，macOS 版会合并成一张浮层：主线任务优先，健康提醒压缩为 `顺手：...`。
 - macOS 版可以设置一个当前主线任务，按 15 分钟活跃时间召回；完成后会停止召回，直到重新设置任务。
 - macOS 版可以从 Obsidian Kanban Markdown 中只读选择未完成任务；候选 section 和文件路径可配置，不会修改 Obsidian 文件。
-- 从 `.app` 启动时，会写入用户的 `LaunchAgents`，下次登录后自动启动。
+- 从 `.app` 启动时，会把当前 App Bundle 路径写入用户的 `LaunchAgents`，下次登录后自动启动。正式安装应从 `/Applications/HealthReminder.app` 启动；运行 `build/HealthReminder.app` 会把自启路径临时改到 `build`，再次启动正式安装版即可恢复。
 - Windows 版会写入当前用户的 `Run` 启动项，下次登录后自动启动。
 
 ## macOS 本地配置
@@ -94,7 +99,7 @@ swift test
 
 打包产物位于 `build/HealthReminder.app`。
 
-macOS 浮层使用 vendored `Vendor/Vortex` 粒子库。上游 Vortex 为 MIT 许可；本仓库保留其 `LICENSE`。App 图标和菜单栏 template 图标位于 `Sources/HealthReminder/Resources/`，打包脚本会生成 `AppIcon.icns` 并复制运行时资源。
+macOS 浮层使用 vendored `Vendor/Vortex` 粒子库。上游 Vortex 为 MIT 许可；本仓库保留其 `LICENSE`。App 图标、菜单栏 template 图标和蓝猫提醒角色位于 `Sources/HealthReminder/Resources/`，打包脚本会生成 `AppIcon.icns` 并复制运行时资源。
 
 Windows 测试和打包在 Windows 环境运行：
 

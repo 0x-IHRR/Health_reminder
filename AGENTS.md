@@ -13,6 +13,7 @@ This is a Swift Package for a small macOS menu bar app.
 Current macOS-specific pieces:
 
 - `ReminderOverlayPresenter`: AppKit `NSPanel` shell plus SwiftUI/Vortex overlay content.
+- `CatHoldingReminderCardView`, `ReminderCharacterLayout`: compose the program-rendered reminder card with the blue-cat character, foreground paw mask, and character-aware panel padding.
 - `OverlaySettingsWindowController`: menu-bar `设置...` window for appearance preview, dynamic health reminders, Kanban source, and About settings; saves to `~/.config/HealthReminder/config.env` and takes effect after app restart.
 - `FocusTaskStore`, `KanbanTaskReader`, `FocusReminderEngine`: main-task recall and read-only Obsidian Kanban intake.
 - `ReminderPresentationComposer`: combines reminders triggered on the same tick into at most one overlay message.
@@ -42,7 +43,14 @@ Builds the release executable, wraps it as `build/HealthReminder.app`, writes th
 open build/HealthReminder.app
 ```
 
-Runs the local packaged app. First launch may request notification permission.
+Runs the local packaged app for development preview. First launch may request notification permission. Because every packaged `.app` writes its own bundle path into the login LaunchAgent, previewing from `build/` temporarily points auto-start there; relaunch `/Applications/HealthReminder.app` after testing to restore the stable install path.
+
+```bash
+ditto build/HealthReminder.app /Applications/HealthReminder.app
+open /Applications/HealthReminder.app
+```
+
+Installs the packaged app at the canonical local runtime path. Quit an already-running HealthReminder instance before replacing the bundle.
 
 ```bash
 hdiutil create -volname HealthReminder -srcfolder build/HealthReminder.app -ov -format UDZO release/HealthReminder-<version>.dmg
@@ -68,11 +76,11 @@ Current history uses concise, imperative commit messages, for example `Initial h
 
 ## Security & Configuration Tips
 
-Do not commit build outputs, `.build/`, `.app`, or `.dmg` artifacts. The app writes a user `LaunchAgents` plist only when run from the packaged `.app`; avoid changing login-item behavior without documenting the user impact. When debugging user reports, confirm which app bundle is actually running because `/Applications/HealthReminder.app` may differ from the freshly built `build/HealthReminder.app`.
+Do not commit build outputs, `.build/`, `.app`, or `.dmg` artifacts. The app writes a user `LaunchAgents` plist whenever it runs from a packaged `.app`, and the plist points to that exact bundle. Keep `/Applications/HealthReminder.app` as the canonical installed copy; after previewing `build/HealthReminder.app`, relaunch the installed copy so auto-start is not left on a transient build path. When debugging user reports, verify both the running executable path and `~/Library/LaunchAgents/com.healthreminder.app.plist`.
 
 macOS appearance, health reminder, Kanban, and About settings are split between the menu `设置...` UI and `~/.config/HealthReminder/config.env`. The settings window does not hot-reload saved values; tell users to restart the app after saving. Keep `config.example.env`, `README.md`, and `AppConfigurationTests` aligned whenever adding or renaming a config key.
 
-App icons live in `Sources/HealthReminder/Resources/`. Keep the full-color app icon and the monochrome status-bar template icon separate; menu bar icons should remain template-safe for dark and light menu bars.
+App icons and the blue-cat reminder character live in `Sources/HealthReminder/Resources/`. Keep the full-color app icon, monochrome status-bar template icon, and `CatClimbCharacterBlue.png` separate; menu bar icons should remain template-safe for dark and light menu bars. The cat artwork must not contain reminder copy because title and body remain program-rendered and configurable.
 
 Overlay vertical positioning is constrained by the card frame, not the whole particle canvas. Keep vertical particle padding small; a tall `NSPanel` makes macOS clamp the entire window back downward, which can make `OVERLAY_VERTICAL_OFFSET_RATIO` appear ineffective.
 

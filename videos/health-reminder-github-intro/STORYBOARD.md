@@ -8,13 +8,13 @@ Assets: `capture/screenshots/scroll-000.png`.
 
 ## Beat 2 - What It Does, 6s-13s
 
-README sentence becomes three active chips: eye break, water, posture. Show "active computer time" as the key rule.
+README sentence becomes three active chips: eye break, water, posture. Show the blue cat holding a program-rendered alert-yellow card, then reveal "macOS screen awake by default · Windows input active" as the key rule.
 
 Assets: generated UI, no external assets.
 
 ## Beat 3 - Behavior, 13s-22s
 
-Three timer cards: 30, 60, 90 minutes. Add a small idle pause note: "离开超过 60 秒，暂停累计".
+Three timer cards: 30, 60, 90 minutes. Add a small pause note: "屏幕睡眠暂停 · 活跃模式空闲 60 秒暂停".
 
 Assets: generated UI.
 
@@ -38,3 +38,4 @@ Assets: `capture/screenshots/scroll-094.png`.
 | `capture/screenshots/scroll-047.png` | Install section | macOS and Windows README text |
 | `capture/screenshots/scroll-094.png` | Dev and release section | Build, test, release commands |
 | `capture/assets/favicon.png` | Optional icon | GitHub favicon, not central |
+| `../../Sources/HealthReminder/Resources/CatClimbCharacterBlue.png` | macOS reminder character | Keep reminder copy program-rendered |
