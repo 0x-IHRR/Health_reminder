@@ -13,7 +13,7 @@ enum ReminderCharacterLayout {
     static let horizontalPadding: CGFloat = 20
 
     static func verticalPadding(for cardSize: CGSize) -> CGFloat {
-        min(max(cardSize.height * 0.78, 110), 170)
+        min(max(cardSize.height * 1.05, 150), 230)
     }
 
     static func compositionSize(for cardSize: CGSize) -> CGSize {
@@ -253,15 +253,11 @@ struct CatHoldingReminderCardView: View {
     }
 
     private var catSize: CGSize {
-        let height = compositionSize.height * 1.18
+        let height = compositionSize.height * 1.22
         return CGSize(
             width: height * 0.666,
             height: height
         )
-    }
-
-    private var foregroundCatHeight: CGFloat {
-        verticalPadding + catSize.height * 0.05
     }
 
     var body: some View {
@@ -279,8 +275,7 @@ struct CatHoldingReminderCardView: View {
 
             catImage
                 .mask(alignment: .top) {
-                    Rectangle()
-                        .frame(height: foregroundCatHeight)
+                    foregroundCatMask
                 }
         }
         .frame(
@@ -291,12 +286,33 @@ struct CatHoldingReminderCardView: View {
         .accessibilityElement(children: .contain)
     }
 
+    private var foregroundCatMask: some View {
+        let pawHeight = catSize.height * 0.065
+        let pawWidth = catSize.width * 0.21
+        let pawSpacing = catSize.width * 0.32
+
+        return ZStack(alignment: .top) {
+            Rectangle()
+                .frame(maxWidth: .infinity)
+                .frame(height: verticalPadding)
+
+            HStack(spacing: pawSpacing) {
+                RoundedRectangle(cornerRadius: pawHeight / 2, style: .continuous)
+                    .frame(width: pawWidth, height: pawHeight)
+                RoundedRectangle(cornerRadius: pawHeight / 2, style: .continuous)
+                    .frame(width: pawWidth, height: pawHeight)
+            }
+            .offset(y: verticalPadding - pawHeight * 0.2)
+        }
+        .frame(width: catSize.width, height: catSize.height, alignment: .top)
+    }
+
     private var catImage: some View {
         Image(nsImage: Self.characterImage)
             .resizable()
             .scaledToFit()
             .frame(width: catSize.width, height: catSize.height)
-            .scaleEffect(x: 1.12, y: 1, anchor: .top)
+            .scaleEffect(x: 1.18, y: 1, anchor: .top)
             .accessibilityHidden(true)
     }
 
