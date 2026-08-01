@@ -20,9 +20,16 @@ enum ReminderCharacterLayout {
         min(max(cardSize.height * 3.8, 520), 880)
     }
 
+    static func characterVerticalOffset(for cardSize: CGSize) -> CGFloat {
+        min(max(cardSize.height * 0.18, 26), 44)
+    }
+
     static func bottomPadding(for cardSize: CGSize) -> CGFloat {
         max(
-            characterHeight(for: cardSize) - topPadding(for: cardSize) - cardSize.height,
+            characterHeight(for: cardSize)
+                + characterVerticalOffset(for: cardSize)
+                - topPadding(for: cardSize)
+                - cardSize.height,
             150
         )
     }
@@ -270,9 +277,18 @@ struct CatHoldingReminderCardView: View {
         )
     }
 
+    private var characterVerticalOffset: CGFloat {
+        ReminderCharacterLayout.characterVerticalOffset(for: cardSize)
+    }
+
+    private var cardTopInCharacter: CGFloat {
+        topPadding - characterVerticalOffset
+    }
+
     var body: some View {
         ZStack(alignment: .top) {
             catImage
+                .offset(y: characterVerticalOffset)
 
             OverlayCardView(
                 title: title,
@@ -287,6 +303,7 @@ struct CatHoldingReminderCardView: View {
                 .mask(alignment: .top) {
                     foregroundCatMask
                 }
+                .offset(y: characterVerticalOffset)
         }
         .frame(
             width: compositionSize.width,
@@ -297,14 +314,14 @@ struct CatHoldingReminderCardView: View {
     }
 
     private var foregroundCatMask: some View {
-        let pawHeight = catSize.height * 0.044
+        let pawHeight = catSize.height * 0.088
         let pawWidth = catSize.width * 0.21
         let pawSpacing = catSize.width * 0.32
 
         return ZStack(alignment: .top) {
             Rectangle()
                 .frame(maxWidth: .infinity)
-                .frame(height: topPadding)
+                .frame(height: cardTopInCharacter)
 
             HStack(spacing: pawSpacing) {
                 RoundedRectangle(cornerRadius: pawHeight / 2, style: .continuous)
@@ -312,7 +329,7 @@ struct CatHoldingReminderCardView: View {
                 RoundedRectangle(cornerRadius: pawHeight / 2, style: .continuous)
                     .frame(width: pawWidth, height: pawHeight)
             }
-            .offset(y: topPadding - pawHeight * 0.5)
+            .offset(y: cardTopInCharacter - pawHeight * 0.25)
         }
         .frame(width: catSize.width, height: catSize.height, alignment: .top)
     }
