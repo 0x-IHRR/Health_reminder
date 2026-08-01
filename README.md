@@ -82,7 +82,7 @@ cp config.example.env ~/.config/HealthReminder/config.env
 - `OVERLAY_PARTICLE_STYLE`：浮层粒子效果，支持 `reconstruct`、`light` 或 `off`，macOS 版由 Vortex 粒子系统渲染。
 - `OVERLAY_PARTICLE_COUNT`、`OVERLAY_PARTICLE_CANVAS_PADDING`：粒子数量和卡片横向外侧粒子画布范围；纵向粒子画布会被限制，避免 macOS 把浮层窗口自动往下夹回屏幕内。
 - `OVERLAY_DISPLAY_SECONDS`：全局浮层显示时间，支持 2-12 秒。
-- `OVERLAY_WIDTH`、`OVERLAY_HEIGHT`：提醒卡片尺寸，默认 `560 × 176`。
+- `OVERLAY_WIDTH`、`OVERLAY_HEIGHT`：提醒卡片尺寸，默认 `640 × 200`。
 - `ABOUT_DEVELOPER_NAME`、`ABOUT_WEBSITE_URL`、`ABOUT_EMAIL`、`ABOUT_GITHUB_URL`、`ABOUT_COMMUNITY_URL`、`ABOUT_FEEDBACK_URL`：关于页开发者信息，空值不会展示。
 
 ## 开发
