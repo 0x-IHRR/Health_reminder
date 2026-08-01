@@ -31,8 +31,13 @@ final class ReminderOverlayPresenter {
         isShowing = true
         let message = queue.removeFirst()
         let cardSize = NSSize(width: configuration.width, height: configuration.height)
-        let horizontalPadding = shouldShowParticles ? effectiveParticleCanvasPadding : 0
-        let verticalPadding = shouldShowParticles ? min(effectiveParticleCanvasPadding, 48) : 0
+        let particleHorizontalPadding = shouldShowParticles ? effectiveParticleCanvasPadding : 0
+        let horizontalPadding = max(particleHorizontalPadding, ReminderCharacterLayout.horizontalPadding)
+        let particleVerticalPadding = shouldShowParticles ? min(effectiveParticleCanvasPadding, 48) : 0
+        let characterVerticalPadding = ReminderCharacterLayout.verticalPadding(
+            for: CGSize(width: cardSize.width, height: cardSize.height)
+        )
+        let verticalPadding = max(particleVerticalPadding, characterVerticalPadding)
         let canvasSize = NSSize(
             width: cardSize.width + horizontalPadding * 2,
             height: cardSize.height + verticalPadding * 2

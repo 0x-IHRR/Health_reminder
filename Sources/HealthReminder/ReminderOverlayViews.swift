@@ -1,3 +1,4 @@
+import AppKit
 import HealthReminderCore
 import SwiftUI
 import Vortex
@@ -6,6 +7,22 @@ enum ReminderOverlayPhase: Equatable {
     case entering
     case stable
     case exiting
+}
+
+enum ReminderCharacterLayout {
+    static let horizontalPadding: CGFloat = 20
+
+    static func verticalPadding(for cardSize: CGSize) -> CGFloat {
+        min(max(cardSize.height * 0.55, 82), 132)
+    }
+
+    static func compositionSize(for cardSize: CGSize) -> CGSize {
+        let verticalPadding = verticalPadding(for: cardSize)
+        return CGSize(
+            width: cardSize.width,
+            height: cardSize.height + verticalPadding * 2
+        )
+    }
 }
 
 struct ReminderOverlayView: View {
@@ -20,6 +37,8 @@ struct ReminderOverlayView: View {
     @State private var phase: ReminderOverlayPhase = .entering
     @State private var cardOpacity = 0.0
     @State private var cardScale = 0.965
+    @State private var cardOffsetY = 72.0
+    @State private var cardRotation = -2.0
 
     private var style: OverlayVisualStyle {
         OverlayVisualStyle(
@@ -51,15 +70,20 @@ struct ReminderOverlayView: View {
                 .accessibilityHidden(true)
             }
 
-            OverlayCardView(
+            CatHoldingReminderCardView(
                 title: title,
                 messageBody: messageBody,
                 style: style,
                 cardSize: cardSize
             )
-            .frame(width: cardSize.width, height: cardSize.height)
+            .frame(
+                width: ReminderCharacterLayout.compositionSize(for: cardSize).width,
+                height: ReminderCharacterLayout.compositionSize(for: cardSize).height
+            )
             .opacity(cardOpacity)
             .scaleEffect(cardScale)
+            .offset(y: cardOffsetY)
+            .rotationEffect(.degrees(cardRotation))
         }
         .frame(
             width: canvasSize.width,
@@ -72,21 +96,25 @@ struct ReminderOverlayView: View {
     private func startTimeline() {
         let particleDuration = particlesEnabled ? configuration.particleDurationSeconds : 0
         let cardDelay = particlesEnabled ? particleDuration * 0.34 : 0
-        let cardFadeDuration = max(configuration.fadeInSeconds, particleDuration * 0.42)
+        let cardEntranceDuration = max(configuration.fadeInSeconds, particleDuration * 0.42, 0.62)
 
         DispatchQueue.main.asyncAfter(deadline: .now() + cardDelay) {
-            withAnimation(.easeOut(duration: cardFadeDuration)) {
+            withAnimation(.spring(response: cardEntranceDuration, dampingFraction: 0.74)) {
                 cardOpacity = 1
                 cardScale = 1
+                cardOffsetY = 0
+                cardRotation = 0
             }
         }
 
-        let exitDelay = cardDelay + cardFadeDuration + configuration.displaySeconds
+        let exitDelay = cardDelay + cardEntranceDuration + configuration.displaySeconds
         DispatchQueue.main.asyncAfter(deadline: .now() + exitDelay) {
             phase = .exiting
             withAnimation(.easeInOut(duration: configuration.fadeOutSeconds)) {
                 cardOpacity = 0
                 cardScale = 0.985
+                cardOffsetY = 54
+                cardRotation = 1.2
             }
         }
 
@@ -107,7 +135,8 @@ struct ReminderOverlayPreviewView: View {
     }
 
     private var contentSize: CGSize {
-        CGSize(width: cardSize.width + 64, height: cardSize.height + 64)
+        let compositionSize = ReminderCharacterLayout.compositionSize(for: cardSize)
+        return CGSize(width: compositionSize.width + 64, height: compositionSize.height + 32)
     }
 
     private var viewportSize: CGSize {
@@ -159,13 +188,16 @@ struct ReminderOverlayPreviewView: View {
                     }
                 }
 
-            OverlayCardView(
+            CatHoldingReminderCardView(
                 title: title,
                 messageBody: messageBody,
                 style: style,
                 cardSize: cardSize
             )
-            .frame(width: cardSize.width, height: cardSize.height)
+            .frame(
+                width: ReminderCharacterLayout.compositionSize(for: cardSize).width,
+                height: ReminderCharacterLayout.compositionSize(for: cardSize).height
+            )
         }
         .frame(width: contentSize.width, height: contentSize.height)
         .scaleEffect(previewScale)
@@ -204,6 +236,79 @@ struct ReminderOverlayPreviewView: View {
             endPoint: .bottomTrailing
         )
     }
+}
+
+struct CatHoldingReminderCardView: View {
+    let title: String
+    let messageBody: String
+    let style: OverlayVisualStyle
+    let cardSize: CGSize
+
+    private var verticalPadding: CGFloat {
+        ReminderCharacterLayout.verticalPadding(for: cardSize)
+    }
+
+    private var compositionSize: CGSize {
+        ReminderCharacterLayout.compositionSize(for: cardSize)
+    }
+
+    private var catSize: CGSize {
+        CGSize(
+            width: compositionSize.height * 0.666,
+            height: compositionSize.height
+        )
+    }
+
+    private var foregroundCatHeight: CGFloat {
+        verticalPadding + compositionSize.height * 0.045
+    }
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            catImage
+
+            OverlayCardView(
+                title: title,
+                messageBody: messageBody,
+                style: style,
+                cardSize: cardSize
+            )
+            .frame(width: cardSize.width, height: cardSize.height)
+            .offset(y: verticalPadding)
+
+            catImage
+                .mask(alignment: .top) {
+                    Rectangle()
+                        .frame(height: foregroundCatHeight)
+                }
+        }
+        .frame(width: compositionSize.width, height: compositionSize.height)
+        .accessibilityElement(children: .contain)
+    }
+
+    private var catImage: some View {
+        Image(nsImage: Self.characterImage)
+            .resizable()
+            .scaledToFit()
+            .frame(width: catSize.width, height: catSize.height)
+            .accessibilityHidden(true)
+    }
+
+    private static let characterImage: NSImage = {
+        let url = Bundle.main.url(
+            forResource: "CatClimbCharacterBlue",
+            withExtension: "png"
+        ) ?? Bundle.module.url(
+            forResource: "CatClimbCharacterBlue",
+            withExtension: "png"
+        )
+
+        guard let url else {
+            return NSImage()
+        }
+
+        return NSImage(contentsOf: url) ?? NSImage()
+    }()
 }
 
 struct OverlayCardView: View {

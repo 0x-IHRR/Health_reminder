@@ -10,6 +10,7 @@ MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
 ICON_SOURCE="$ROOT_DIR/Sources/HealthReminder/Resources/AppIcon.png"
 STATUS_ICON_SOURCE="$ROOT_DIR/Sources/HealthReminder/Resources/StatusBarIcon.png"
+CAT_CHARACTER_SOURCE="$ROOT_DIR/Sources/HealthReminder/Resources/CatClimbCharacterBlue.png"
 ICONSET_DIR="$ROOT_DIR/build/AppIcon.iconset"
 
 cd "$ROOT_DIR"
@@ -38,6 +39,10 @@ fi
 
 if [[ -f "$STATUS_ICON_SOURCE" ]]; then
     cp "$STATUS_ICON_SOURCE" "$RESOURCES_DIR/StatusBarIcon.png"
+fi
+
+if [[ -f "$CAT_CHARACTER_SOURCE" ]]; then
+    cp "$CAT_CHARACTER_SOURCE" "$RESOURCES_DIR/CatClimbCharacterBlue.png"
 fi
 
 cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
