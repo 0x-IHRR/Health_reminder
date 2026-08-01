@@ -12,15 +12,25 @@ enum ReminderOverlayPhase: Equatable {
 enum ReminderCharacterLayout {
     static let horizontalPadding: CGFloat = 20
 
-    static func verticalPadding(for cardSize: CGSize) -> CGFloat {
+    static func topPadding(for cardSize: CGSize) -> CGFloat {
         min(max(cardSize.height * 1.05, 150), 230)
     }
 
+    static func characterHeight(for cardSize: CGSize) -> CGFloat {
+        min(max(cardSize.height * 3.8, 520), 880)
+    }
+
+    static func bottomPadding(for cardSize: CGSize) -> CGFloat {
+        max(
+            characterHeight(for: cardSize) - topPadding(for: cardSize) - cardSize.height,
+            150
+        )
+    }
+
     static func compositionSize(for cardSize: CGSize) -> CGSize {
-        let verticalPadding = verticalPadding(for: cardSize)
         return CGSize(
             width: cardSize.width,
-            height: cardSize.height + verticalPadding * 2
+            height: cardSize.height + topPadding(for: cardSize) + bottomPadding(for: cardSize)
         )
     }
 }
@@ -244,8 +254,8 @@ struct CatHoldingReminderCardView: View {
     let style: OverlayVisualStyle
     let cardSize: CGSize
 
-    private var verticalPadding: CGFloat {
-        ReminderCharacterLayout.verticalPadding(for: cardSize)
+    private var topPadding: CGFloat {
+        ReminderCharacterLayout.topPadding(for: cardSize)
     }
 
     private var compositionSize: CGSize {
@@ -253,7 +263,7 @@ struct CatHoldingReminderCardView: View {
     }
 
     private var catSize: CGSize {
-        let height = compositionSize.height * 1.22
+        let height = ReminderCharacterLayout.characterHeight(for: cardSize)
         return CGSize(
             width: height * 0.666,
             height: height
@@ -271,7 +281,7 @@ struct CatHoldingReminderCardView: View {
                 cardSize: cardSize
             )
             .frame(width: cardSize.width, height: cardSize.height)
-            .offset(y: verticalPadding)
+            .offset(y: topPadding)
 
             catImage
                 .mask(alignment: .top) {
@@ -287,14 +297,14 @@ struct CatHoldingReminderCardView: View {
     }
 
     private var foregroundCatMask: some View {
-        let pawHeight = catSize.height * 0.065
+        let pawHeight = catSize.height * 0.044
         let pawWidth = catSize.width * 0.21
         let pawSpacing = catSize.width * 0.32
 
         return ZStack(alignment: .top) {
             Rectangle()
                 .frame(maxWidth: .infinity)
-                .frame(height: verticalPadding)
+                .frame(height: topPadding)
 
             HStack(spacing: pawSpacing) {
                 RoundedRectangle(cornerRadius: pawHeight / 2, style: .continuous)
@@ -302,7 +312,7 @@ struct CatHoldingReminderCardView: View {
                 RoundedRectangle(cornerRadius: pawHeight / 2, style: .continuous)
                     .frame(width: pawWidth, height: pawHeight)
             }
-            .offset(y: verticalPadding - pawHeight * 0.2)
+            .offset(y: topPadding - pawHeight * 0.5)
         }
         .frame(width: catSize.width, height: catSize.height, alignment: .top)
     }
