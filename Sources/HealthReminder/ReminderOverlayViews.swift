@@ -529,8 +529,8 @@ struct OverlayVisualStyle {
             titleFontSize = 20
             bodyFontSize = 14
         case "large":
-            titleFontSize = 26
-            bodyFontSize = 17
+            titleFontSize = 32
+            bodyFontSize = 21
         default:
             titleFontSize = 23
             bodyFontSize = 15.5
